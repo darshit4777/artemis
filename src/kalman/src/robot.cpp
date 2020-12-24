@@ -29,9 +29,13 @@ void Robot::ReadRosparams()
     /**
      * Read rosparams
      */
+    // Parameters for ros topicss
     _nodehandle.param("odom_topic",m_topicNames.m_imuTopic,std::string("/odom"));
     _nodehandle.param("imu_topic",m_topicNames.m_imuTopic,std::string("/imu/data"));
     _nodehandle.param("filtered_odom_topic",m_topicNames.m_filteredOdometryTopic,std::string("/filtered_odom"));
+    
+    // Parameters for robot frame and map frame. Sometimes these may take names
+    // Apart from the default base_link and map - best to parameterize it.
     _nodehandle.param("robot_frame",m_robotFrame,std::string("base_link"));
     _nodehandle.param("map_frame",m_mapFrame,std::string("map"));
 
