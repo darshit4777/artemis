@@ -19,7 +19,7 @@ public:
     // TODO : Create a method that takes in specific values from each sensor to be used for the filter
 
     // TODO : Problems to be Solved :
-    // 1 - How to create activation for various measurements
+    // 1 - How to create activation for various measurements - Done
     // 2 - Should we be caring about sparse matrices and their multiplication?
     // 3 - How to create support for multiple sensors.
     // 4 - How to solve the problem of two sensors measuring the same quantity.
@@ -28,10 +28,19 @@ public:
     std::vector<unsigned int> m_imuActivationVector;  //< Activation vector used for imu measurements
 
 
+    // Creating a struct to store the information from each sensor
+    struct sensor
+    {
+        std::vector<int> sensorInputVector;
+        Eigen::MatrixXd measurementNoiseMatrix;
+    };
+
+    std::vector<sensor> sensorVector; //< Vector which holds all sensor information.
+
 
     // # TODO : Create a method that takes in the A matrix , B Matrix and C matrix as specified in a rosparam.
-    // Until then we can continue to operate with a single state space model
-    
+    // Until then we can continue to operate with a single state space model    
+
     Eigen::MatrixXd m_stateMatrix;  //< State Matrix A 
     Eigen::MatrixXd m_controlMatrix; //< Control Matrix B 
     Eigen::MatrixXd m_measurementMatrix; //< Measurement Matrix C
@@ -44,8 +53,8 @@ public:
     Eigen::MatrixXd m_KalmanGain; //< Matrix to hold the Kalman Gain
 
     struct belief{
-        std::vector<double> *meanVector;
-        Eigen::MatrixXd *covarianceMatrix;
+        std::vector<double> meanVector;
+        Eigen::MatrixXd covarianceMatrix;
     };
     belief m_inputBelief;
     belief m_outputBelief;
@@ -55,9 +64,9 @@ public:
 
     /** 
      * @brief Read the rosparams
-     * @return True if succesful in reading params and False if there are errors
+     * @return Void. if unsuccesful in reading params then exceptions will be raised
      */
-    bool ReadParams();
+    void ReadParams();
 
     /**
      * @brief Uses the activation vector provded to create the C matrix.

@@ -9,10 +9,16 @@
 #include "kalman/filter_base.hpp"
 
 
-FilterBase::FilterBase(/* args */)
+FilterBase::FilterBase()
 {
-}
+    // Reading Rosparams to setup filter and sensor properties
+    FilterBase::ReadParams();
 
+    return;
+};
+
+bool FilterBase::ReadParams()
 FilterBase::~FilterBase()
 {
+    
 }
