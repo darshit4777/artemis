@@ -8,10 +8,11 @@
 #include "tf2_ros/transform_broadcaster.h"
 #include "nav_msgs/Odometry.h"
 #include "sensor_msgs/Imu.h"
+#include "yaml-cpp/node/node.h"
 class FilterBase
 {
 private:
-    /* data */
+    // ros::NodeHandle _nh;
 public:
     std::vector<double> m_stateVector; //< State Vector
     std::vector<double> m_controlVector; //< Control Vector
@@ -30,10 +31,11 @@ public:
 
     // Creating a struct to store the information from each sensor
     struct sensor
-    {
-        std::vector<int> sensorInputVector;
+    {   std::string sensorName;
+        std::vector<bool> sensorInputVector;
         Eigen::MatrixXd measurementNoiseMatrix;
     };
+    std::vector<std::string> m_sensorList;
 
     std::vector<sensor> sensorVector; //< Vector which holds all sensor information.
 

@@ -5,11 +5,11 @@ sensor_list:
 
 sensor_properties:
   wheel_odometry:
-    measurements: [ true  , true,   false,
-                    true  , true,   false,
-                    false , false,  false,
-                    false , false,  false,
-                    false , false,  false]
+    measurements: { x_pos: true,y_pos: true,z_pos: false,
+                    x_vel: true,y_vel: true,z_vel: false,
+                    x_acc: false,y_acc: false,z_acc: false,
+                    x_rot: false,y_rot: false,z_rot: false,
+                    x_ang_vel: false,y_ang_vel: false,z_ang_vel: false}
     measurement_covariance: [ 1e-3  ,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,
                               0.0  ,  1e-3,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,
                               0.0  ,  0.0,  1e-3,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,
@@ -27,11 +27,11 @@ sensor_properties:
                               0.0  ,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  1e-3]
 
   imu1:
-    measurements: [ false , false , false,
-                    false , false , false,
-                    true  , true  , true,
-                    false , false , false,
-                    false , false , false]
+    measurements: { x_pos: false,y_pos: false,z_pos: false,
+                    x_vel: false,y_vel: false,z_vel: false,
+                    x_acc: true,y_acc: true,z_acc: true,
+                    x_rot: false,y_rot: false,z_rot: false,
+                    x_ang_vel: false,y_ang_vel: false,z_ang_vel: false}
     measurement_covariance: [ 1e-3  ,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,
                               0.0  ,  1e-3,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,
                               0.0  ,  0.0,  1e-3,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,
@@ -49,11 +49,11 @@ sensor_properties:
                               0.0  ,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  1e-3]
 
   imu2:
-    measurements: [ false , false , false,
-                    false , false , false,
-                    true  , true  , true,
-                    false , false , false,
-                    false , false , false]
+    measurements: { x_pos: false,y_pos: false,z_pos: false,
+                    x_vel: false,y_vel: false,z_vel: false,
+                    x_acc: true,y_acc: true,z_acc: true,
+                    x_rot: false,y_rot: false,z_rot: false,
+                    x_ang_vel: false,y_ang_vel: false,z_ang_vel: false}
     measurement_covariance: [ 1e-3  ,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,
                               0.0  ,  1e-3,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,
                               0.0  ,  0.0,  1e-3,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,
