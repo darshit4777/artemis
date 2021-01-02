@@ -9,38 +9,99 @@
 #include "kalman/filter_base.hpp"
 #include "yaml-cpp/yaml.h"
 #include "yaml-cpp/node/node.h"
-
+#include "boost/bind.hpp"
 
 FilterBase::FilterBase()
 {
     // Reading params to setup filter and sensor properties
-    FilterBase::ReadParams();
+    YAML::Node paramList = FilterBase::ReadParams();
+    
+    // Create vector of sensors with assigned parameters
+    FilterBase::AssignSensorParams(paramList);
+    // Create measurement matrix.
+    // We use the for each function 
+    std::for_each(m_sensorVector.begin(),m_sensorVector.end(),boost::bind(&FilterBase::CreateMeasurementMatrix,this,_1));
+    std::cout<<"Filter Base has completed initialization"<<std::endl;
     return;
 };
 
-void FilterBase::ReadParams(){
+YAML::Node FilterBase::ReadParams(){
     
     YAML::Node paramList = YAML::LoadFile("/home/darshit/slam-workspace/Code/robot-navigation/src/kalman/config/filter_params.yaml");
+    return paramList;
+};
+
+void FilterBase::AssignSensorParams(YAML::Node& paramList)
+{
     // Extract the sensor list first
     m_sensorList = paramList["sensor_list"].as<std::vector<std::string>>();
     
     // Load all the sensor properties into one YAML node.
     auto sensor_properties_list = paramList["sensor_properties"];
     
+    // TODO : implement a check for all sensors available in the sensor list 
+    // to be present in the sensor_properties_list. To raise an exception if 
+    // not present
+
     for(std::string sensor_iterator : m_sensorList)
     {
         auto sensor_properties = sensor_properties_list[sensor_iterator];
+        // Create an instance of the sensor struct.
         sensor sensorInstance;
+        // Assign the sensor name
         sensorInstance.sensorName = sensor_iterator;
+        
+        // Assign the sensor input vector
         sensorInstance.sensorInputVector = sensor_properties["measurements"].as<std::vector<bool>>();
         
+        // Assign the sensor noise covariance matrix
         std::vector<double> vectorizedMeasurementNoise;
         vectorizedMeasurementNoise = sensor_properties["measurement_covariance"].as<std::vector<double>>(); 
         sensorInstance.measurementNoiseMatrix.resize(15,15);
         sensorInstance.measurementNoiseMatrix = Eigen::Map<Eigen::Matrix<double,15,15>>(vectorizedMeasurementNoise.data());  
+
+        // Add the sensor to the list of available sensors
+        m_sensorVector.push_back(sensorInstance);  
+    };
+    return;
+}
+
+void FilterBase::CreateMeasurementMatrix(FilterBase::sensor& sensor)
+{
+    // For the argument sensor, we will create the measurement matrix
+    Eigen::MatrixXd measurementMatrix;
+    int stateSize = 15;
+    int measurementSize = std::count(sensor.sensorInputVector.begin(),sensor.sensorInputVector.end(),true);
+    measurementMatrix.resize(measurementSize,stateSize);
+    measurementMatrix.setZero();
+
+    std::vector<bool> copyVector = sensor.sensorInputVector;
+    
+    // Algorithm - for each 1 found in the copy vector - create a row vector with one at that position
+    // also convert the 1 in the copy vector to 0 and run again. 
+
+
+    for(int i = 0; i < measurementSize; i++)
+    {
+        std::vector<bool>::iterator itr = std::find(copyVector.begin(),copyVector.end(), true);
+        
+        // Get the position of the index where the true exists
+        int indexPosition = std::distance(copyVector.begin(),itr);
+        Eigen::MatrixXd measurementVector;
+        measurementVector.resize(1,stateSize);
+        measurementVector.setZero();
+        measurementVector(indexPosition) = 1.0;
+
+        // Adding tte measurement vector to the measurement matrix
+        measurementMatrix.row(i) = measurementVector;
+
+        // Setting the value at the generated index to zero.
+        copyVector[indexPosition] = false;
     };
 
-    
+    // Assign the measurement matrix to the correct sensor
+    sensor.measurementMatrix = measurementMatrix;
+    return;
 };
 
 FilterBase::~FilterBase()

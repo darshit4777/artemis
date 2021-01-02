@@ -16,8 +16,6 @@ private:
 public:
     std::vector<double> m_stateVector; //< State Vector
     std::vector<double> m_controlVector; //< Control Vector
-    
-    // TODO : Create a method that takes in specific values from each sensor to be used for the filter
 
     // TODO : Problems to be Solved :
     // 1 - How to create activation for various measurements - Done
@@ -34,10 +32,11 @@ public:
     {   std::string sensorName;
         std::vector<bool> sensorInputVector;
         Eigen::MatrixXd measurementNoiseMatrix;
+        Eigen::MatrixXd measurementMatrix;
     };
     std::vector<std::string> m_sensorList;
 
-    std::vector<sensor> sensorVector; //< Vector which holds all sensor information.
+    std::vector<FilterBase::sensor> m_sensorVector; //< Vector which holds all sensor information.
 
 
     // # TODO : Create a method that takes in the A matrix , B Matrix and C matrix as specified in a rosparam.
@@ -65,15 +64,22 @@ public:
     ~FilterBase();
 
     /** 
-     * @brief Read the rosparams
-     * @return Void. if unsuccesful in reading params then exceptions will be raised
+     * @brief Reads a yaml config file and assigns values to the sensor vector member
+     * @return YAML Node which can be further pruned to extract params. 
+     * If unsuccesful in reading params then exceptions will be raised
      */
-    void ReadParams();
+    YAML::Node ReadParams();
+    /**
+     * @brief uses the params read from the param file, creates sensors and assigns
+     * parameters to them.
+     * @return void.
+     */
+    void AssignSensorParams(YAML::Node& paramList);
 
     /**
      * @brief Uses the activation vector provded to create the C matrix.
      */
-    void CreateMeasurementMatrix();
+    void CreateMeasurementMatrix(FilterBase::sensor& sensor);
 
     /**
      * @brief Creates the state matrix
