@@ -26,7 +26,7 @@ FilterBase::FilterBase()
 };
 
 YAML::Node FilterBase::ReadParams(){
-    
+    ROS_INFO("Reading params to setup filter");
     YAML::Node paramList = YAML::LoadFile("/home/darshit/slam-workspace/Code/robot-navigation/src/kalman/config/filter_params.yaml");
     return paramList;
 };
@@ -47,7 +47,7 @@ void FilterBase::AssignSensorParams(YAML::Node& paramList)
     {
         auto sensor_properties = sensor_properties_list[sensor_iterator];
         // Create an instance of the sensor struct.
-        sensor sensorInstance;
+        Sensor sensorInstance;
         // Assign the sensor name
         sensorInstance.sensorName = sensor_iterator;
         
@@ -66,7 +66,7 @@ void FilterBase::AssignSensorParams(YAML::Node& paramList)
     return;
 }
 
-void FilterBase::CreateMeasurementMatrix(FilterBase::sensor& sensor)
+void FilterBase::CreateMeasurementMatrix(FilterBase::Sensor& sensor)
 {
     // For the argument sensor, we will create the measurement matrix
     Eigen::MatrixXd measurementMatrix;
@@ -109,7 +109,21 @@ FilterBase::~FilterBase()
     
 };
 
-int main(){
-    std::cout<<"Starting filter base"<<std::endl;
-    FilterBase filterBase;
+void FilterBase::Sensor::UpdateMeasurements(std::vector<double> measurement)
+{
+    // This function will be used to update the internal measurement vector
+    // To make things simpler we ask for measurements to be provided in a standard vector
+    
+    // Currently we support a full state vector only with a state size of 15 states.
+    assert(measurement.size() == 15);
+    this->measurementVector.resize(15,1);
+    this->measurementVector.setZero();
+
+    // Map the data of the std::vector to the Eigen Matrix
+    this->measurementVector = Eigen::Map<Eigen::Matrix<double,15,1>>(measurement.data());
+    return;
 }
+//int main(){
+//    std::cout<<"Starting filter base"<<std::endl;
+//    FilterBase filterBase;
+//}

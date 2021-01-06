@@ -8,6 +8,7 @@
 #include "tf2_ros/transform_broadcaster.h"
 #include "nav_msgs/Odometry.h"
 #include "sensor_msgs/Imu.h"
+#include "kalman/filter_base.hpp"
 
 class Robot
 {
@@ -16,40 +17,23 @@ private:
     ros::Publisher _filteredOdometryPublisher;
     ros::NodeHandle _nodehandle;
     
-    // Subscribers for various state variables
-    ros::Subscriber _odometrySubscriber;
-    ros::Subscriber _imuSubscriber;
-    
     // Transform buffer and broadcaster - to Publish the robot to map transform.
-    
-    //tf2_ros::Buffer _transformBuffer;
-    //tf2_ros::TransformListener _transformListener;
-    static tf2_ros::TransformBroadcaster _transfromBroadcaster;
-    
-    // A steady timer to run the filter at a specific frequency.
-    // ros::SteadyTimer filterTimer;
+    tf2_ros::TransformBroadcaster _transfromBroadcaster;
     
 public:
     
     std::string m_robotFrame; //< Robot base link frame of reference
     std::string m_mapFrame;   //< World / map frame of reference.
     
-    struct topicNames{
-        std::string m_odometryTopic;
-        std::string m_imuTopic;
-        std::string m_gpsTopic;
-        std::string m_filteredOdometryTopic;
-    } m_topicNames;
-
+    //std::set<std::pair<std::string,std::string>> m_sensorSet;
+    std::map<std::string,std::string> m_sensorSet;
+    std::vector<ros::Subscriber> subscriberVector;
+    
     nav_msgs::Odometry m_robotRawOdometry;
     nav_msgs::Odometry m_robotFilteredOdometry;
 
-    sensor_msgs::Imu m_robotRawImu;
-
-    bool m_odometryReceived;
-    bool m_imuReceived;
-    // TODO: Add a filter KF or EKF here 
-
+    
+    FilterBase m_filterBase;
     /**
      * @brief Class constructor. Initializes the class and assigns the nodehandle.
      * Sets the rosparams and starts the filter timer
@@ -61,6 +45,13 @@ public:
     void ImuCallback(const sensor_msgs::Imu::ConstPtr& msg);
     void ReadRosparams();
     void PublishTransform();
+    void CreateMeasurementFromOdometry(const nav_msgs::Odometry);
+    void CreateMeasurementFromImu(const sensor_msgs::Imu);
+
+    private:
+    void CreateSubscribers(FilterBase::Sensor sensor);
+    void CreateSensorTopicPair(std::string sensorName);
+
     
 };
 

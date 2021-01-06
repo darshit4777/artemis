@@ -1,0 +1,4 @@
+<launch>
+    <rosparam file="$(find kalman)/config/filter_params.yaml" />
+    <node name="kalman_ros_node" type="kalman_ros_node" pkg="kalman" output="screen" />
+</launch>

@@ -28,15 +28,22 @@ public:
 
 
     // Creating a struct to store the information from each sensor
-    struct sensor
-    {   std::string sensorName;
+    class Sensor
+    {   
+        public:
+        std::string sensorType;
+        std::string sensorName;
         std::vector<bool> sensorInputVector;
         Eigen::MatrixXd measurementNoiseMatrix;
         Eigen::MatrixXd measurementMatrix;
+        Eigen::MatrixXd measurementVector;
+
+        void UpdateMeasurements(std::vector<double> measurement);
+
     };
     std::vector<std::string> m_sensorList;
 
-    std::vector<FilterBase::sensor> m_sensorVector; //< Vector which holds all sensor information.
+    std::vector<FilterBase::Sensor> m_sensorVector; //< Vector which holds all sensor information.
 
 
     // # TODO : Create a method that takes in the A matrix , B Matrix and C matrix as specified in a rosparam.
@@ -79,7 +86,7 @@ public:
     /**
      * @brief Uses the activation vector provded to create the C matrix.
      */
-    void CreateMeasurementMatrix(FilterBase::sensor& sensor);
+    void CreateMeasurementMatrix(FilterBase::Sensor& sensor);
 
     /**
      * @brief Creates the state matrix
