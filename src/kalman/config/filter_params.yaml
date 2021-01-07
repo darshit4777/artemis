@@ -6,6 +6,7 @@ sensor_list:
 sensor_properties:
   wheel_odometry:
     sensor_topic: "/boxer_velocity_controller/odom"
+    sensor_type: "odometry"
     measurements: [ true  , true,   false,
                     true  , true,   false,
                     false , false,  false,
@@ -29,6 +30,7 @@ sensor_properties:
 
   imu1:
     sensor_topic: "/vectornav/imu"
+    sensor_type: "imu"
     measurements: [ false , false , false,
                     false , false , false,
                     true  , true  , true,
@@ -52,6 +54,7 @@ sensor_properties:
 
   imu2:
     sensor_topic: "/zed_camera/imu"
+    sensor_type: "imu"
     measurements: [ false , false , false,
                     false , false , false,
                     true  , true  , true,

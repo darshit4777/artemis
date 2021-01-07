@@ -50,7 +50,8 @@ void FilterBase::AssignSensorParams(YAML::Node& paramList)
         Sensor sensorInstance;
         // Assign the sensor name
         sensorInstance.sensorName = sensor_iterator;
-        
+        // Assign the sensor type
+        sensorInstance.sensorType = sensor_properties["sensor_type"].as<std::string>();
         // Assign the sensor input vector
         sensorInstance.sensorInputVector = sensor_properties["measurements"].as<std::vector<bool>>();
         

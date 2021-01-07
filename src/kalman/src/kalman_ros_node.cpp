@@ -8,16 +8,23 @@
 
 Robot::Robot(const ros::NodeHandle *nh)
 {
-    // Class constructor.
-    _nodehandle = *nh;
-    
+    /**
+     * The class constructor will assign the nodehandle, read rosparams and pair
+     * sensors with topic names. The create subscribers function, will create 
+     * appropriate subscribers on the basis of sensor type and topic name.
+     */
+
+
+    _nodehandle = *nh; 
     ReadRosparams();
-    CreateSubscribers(m_filterBase.m_sensorVector[0]);
+    
+    // Create subscribers and assign callbacks for each sensor type.
+    std::for_each(m_filterBase.m_sensorVector.begin(),m_filterBase.m_sensorVector.end(),
+    boost::bind(&Robot::CreateSubscribers,this,_1));    
 
     // Assigning the publisher
     _filteredOdometryPublisher = 
     _nodehandle.advertise<nav_msgs::Odometry>("/filtered_odometry_topic",10);
-
 
     return;
 };
@@ -41,7 +48,7 @@ void Robot::ReadRosparams()
 
 };
 
-void Robot::OdometryCallback(const nav_msgs::OdometryConstPtr& msg)
+void Robot::OdometryCallback(const nav_msgs::OdometryConstPtr& msg,std::string topicName)
 {
     // Callback for odometry subscriber
     
@@ -54,7 +61,7 @@ void Robot::OdometryCallback(const nav_msgs::OdometryConstPtr& msg)
     return;
 };
 
-void Robot::ImuCallback(const sensor_msgs::Imu::ConstPtr& msg)
+void Robot::ImuCallback(const sensor_msgs::Imu::ConstPtr& msg,std::string topicName)
 {
     // Callback for odometry subscriber
     //m_robotRawImu = *msg;
@@ -93,18 +100,30 @@ void Robot::PublishTransform()
 void Robot::CreateSubscribers(FilterBase::Sensor sensor)
 {
     // This function will create subscribers on the basis of sensor name, type and topic name provided.
-    ROS_INFO("Create Subs has been called");
     ros::Subscriber subscriberInstance;
     
     // Find the relevant topic of the sensor from the sensor name-topic pair map
-    //std::set<std::pair<std::string,std::string>>::iterator itr = std::find(m_sensorSet.begin(),
-    std::string sensorName = sensor.sensorName;
-    std::cout<<m_sensorSet[sensorName]<<std::endl;
-    
+    std::string subscriberTopicName = m_sensorSet[sensor.sensorName];
+    std::string sensorType = sensor.sensorType;
 
-    // Algorithm - find the ros topic name that the sensor holds from the rosparams
-    // match the name of the sensor and then according to sensor type - create a 
-    // subscriber with a appropriate callback.
+    if(sensorType == "odometry"){
+        /**
+         * For odometry sensors we create a generalized odometry subsciber
+         */
+        subscriberInstance = _nodehandle.subscribe<nav_msgs::Odometry>(subscriberTopicName,20,
+        boost::bind(&Robot::OdometryCallback,this,_1,subscriberTopicName));
+    }
+    else if (sensorType == "imu"){
+        /**
+         * For inertial sensors we create a genearlized subscriber
+         */
+        subscriberInstance = _nodehandle.subscribe<sensor_msgs::Imu>(subscriberTopicName,20,
+        boost::bind(&Robot::ImuCallback,this,_1,subscriberTopicName));
+    };
+    subscriberVector.push_back(subscriberInstance);
+    std::string logString = "Subscriber created for " + sensor.sensorName + " listening to topic " + subscriberTopicName;
+    ROS_INFO_STREAM(logString);
+
     return;
 };
 

@@ -41,8 +41,8 @@ public:
     Robot(const ros::NodeHandle *nh);
     ~Robot();
 
-    void OdometryCallback(const nav_msgs::Odometry::ConstPtr& msg);
-    void ImuCallback(const sensor_msgs::Imu::ConstPtr& msg);
+    void OdometryCallback(const nav_msgs::Odometry::ConstPtr& msg,std::string topicName);
+    void ImuCallback(const sensor_msgs::Imu::ConstPtr& msg,std::string topicName);
     void ReadRosparams();
     void PublishTransform();
     void CreateMeasurementFromOdometry(const nav_msgs::Odometry);
