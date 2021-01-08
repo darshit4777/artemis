@@ -4,6 +4,10 @@
 #include "geometry_msgs/Twist.h"
 #include "geometry_msgs/Quaternion.h"
 #include "kalman/kalman_ros_node.hpp"
+#include "tf/tf.h"
+
+
+
 //#include "kalman/filter_base.hpp"
 
 Robot::Robot(const ros::NodeHandle *nh)
@@ -48,30 +52,131 @@ void Robot::ReadRosparams()
 
 };
 
-void Robot::OdometryCallback(const nav_msgs::OdometryConstPtr& msg,std::string topicName)
+void Robot::OdometryCallback(const nav_msgs::Odometry::ConstPtr& msg,FilterBase::Sensor &sensor)
 {
-    // Callback for odometry subscriber
-    
-    //m_robotRawOdometry = *msg;
-    //if(!m_odometryReceived)
-    //{
-    //    m_odometryReceived = true;
-    //    ROS_INFO("Odometry received !!");
-    //};
+    /**
+     * General Callback for odometry subscriber
+     * Odometry message contents has specific positions in the measurement vector
+     * The measurement vector is defined as 
+     * [x_pos, y_pos, z_pos, x_vel, y_vel, z_vel, x_acc, y_acc, z_acc, x_theta, y_theta, z_theta, x_omega, y_omega, z_omega]
+     * An odometry message gives the following information 
+     * x, y, z positions
+     * x, y, z velocities
+     * x, y, z orientations (theta)
+     * x, y, z angular velocities (omega)
+     * Therefore these measurements will be put in the correct positions of a measurement vector.
+     * 
+     * The prepare odometry measurement function carries out all the necessary assignments
+     */
+    nav_msgs::Odometry odomMsg = *msg;
+    sensor.UpdateMeasurements(PrepareOdometryMeasurement(odomMsg));
     return;
 };
 
-void Robot::ImuCallback(const sensor_msgs::Imu::ConstPtr& msg,std::string topicName)
+std::vector<double> Robot::PrepareOdometryMeasurement(const nav_msgs::Odometry &odomMsg){
+    std::vector<double> measurementVector;
+    // Positions
+    measurementVector[0] = odomMsg.pose.pose.position.x;
+    measurementVector[1] = odomMsg.pose.pose.position.y;
+    measurementVector[2] = odomMsg.pose.pose.position.z;
+
+    // Velocities
+    measurementVector[3] = odomMsg.twist.twist.linear.x;
+    measurementVector[4] = odomMsg.twist.twist.linear.y;
+    measurementVector[5] = odomMsg.twist.twist.linear.z;
+
+    // Accelerations
+    measurementVector[6] = 0.0;
+    measurementVector[7] = 0.0;
+    measurementVector[8] = 0.0;
+
+    // Orientations
+    // TODO : Currently we make the assumption of 2D motion only. This means, 
+    // Pitch and roll will be ignored. Yaw will be given most importance.
+    Eigen::Quaternion<double> q;
+    q.x() = odomMsg.pose.pose.orientation.x;
+    q.y() = odomMsg.pose.pose.orientation.y;
+    q.z() = odomMsg.pose.pose.orientation.z;
+    q.w() = odomMsg.pose.pose.orientation.w; 
+    Eigen::AngleAxis<double> angleAxis(q); 
+    
+    // This is probably a bad way of doing things 
+    measurementVector[9] = 0.0;
+    measurementVector[10] = 0.0;
+    measurementVector[11] = angleAxis.angle();
+    
+    // Angular Velocities
+    measurementVector[12] = odomMsg.twist.twist.angular.x;
+    measurementVector[13] = odomMsg.twist.twist.angular.y;
+    measurementVector[14] = odomMsg.twist.twist.angular.z;
+
+    return measurementVector;
+}
+
+void Robot::ImuCallback(const sensor_msgs::Imu::ConstPtr& msg,FilterBase::Sensor &sensor)
 {
-    // Callback for odometry subscriber
-    //m_robotRawImu = *msg;
-    //if(!m_imuReceived)
-    //{
-    //    m_imuReceived = true;
-    //    ROS_INFO("IMU messages received !!");
-    //};
+    /**
+     * General Callback for odometry subscriber
+     * IMU message contents has specific positions in the measurement vector
+     * The measurement vector is defined as 
+     * [x_pos, y_pos, z_pos, x_vel, y_vel, z_vel, x_acc, y_acc, z_acc, x_theta, y_theta, z_theta, x_omega, y_omega, z_omega]
+     * An odometry message gives the following information 
+     * x ,y, z accelerations
+     * x, y, z orientations (theta)
+     * x, y, z angular velocities (omega)
+     * Therefore these measurements will be put in the correct positions of a measurement vector.
+     * 
+     * The prepare imu measurement function carries out all the necessary assignments
+     */
+    
+    // General Callback for IMU subscriber
+    sensor_msgs::Imu imuMsg = *msg;
+    sensor.UpdateMeasurements(PrepareImuMeasurement(imuMsg));
     return;
 };
+
+std::vector<double> PrepareImuMeasurement(const sensor_msgs::Imu &imuMsg)
+{
+    // Prepare a measurement using IMU data
+    std::vector<double> measurementVector;
+    // Positions
+    measurementVector[0] = 0.0;
+    measurementVector[1] = 0.0;
+    measurementVector[2] = 0.0;
+
+    // Velocities
+    measurementVector[3] = 0.0;
+    measurementVector[4] = 0.0;
+    measurementVector[5] = 0.0;
+
+    // AccelerationsimuMsg.linear_acceleration.x
+    measurementVector[6] = imuMsg.linear_acceleration.x;
+    measurementVector[7] = imuMsg.linear_acceleration.y;
+    measurementVector[8] = imuMsg.linear_acceleration.z;
+
+    // Orientations
+    // TODO : Currently we make the assumption of 2D motion only. This means, 
+    // Pitch and roll will be ignored. Yaw will be given most importance.
+    Eigen::Quaternion<double> q;
+    q.x() = imuMsg.orientation.x;
+    q.y() = imuMsg.orientation.y;
+    q.z() = imuMsg.orientation.z;
+    q.w() = imuMsg.orientation.w; 
+    Eigen::AngleAxis<double> angleAxis(q); 
+    
+    // This is probably a bad way of doing things 
+    measurementVector[9] = 0.0;
+    measurementVector[10] = 0.0;
+    measurementVector[11] = angleAxis.angle();
+    
+    // Angular Velocities
+    measurementVector[12] = imuMsg.angular_velocity.x;
+    measurementVector[13] = imuMsg.angular_velocity.y;
+    measurementVector[14] = imuMsg.angular_velocity.z;
+
+    return measurementVector;
+
+}
 
 void Robot::PublishTransform()
 {
@@ -111,14 +216,14 @@ void Robot::CreateSubscribers(FilterBase::Sensor sensor)
          * For odometry sensors we create a generalized odometry subsciber
          */
         subscriberInstance = _nodehandle.subscribe<nav_msgs::Odometry>(subscriberTopicName,20,
-        boost::bind(&Robot::OdometryCallback,this,_1,subscriberTopicName));
+        boost::bind(&Robot::OdometryCallback,this,_1,sensor));
     }
     else if (sensorType == "imu"){
         /**
          * For inertial sensors we create a genearlized subscriber
          */
         subscriberInstance = _nodehandle.subscribe<sensor_msgs::Imu>(subscriberTopicName,20,
-        boost::bind(&Robot::ImuCallback,this,_1,subscriberTopicName));
+        boost::bind(&Robot::ImuCallback,this,_1,sensor));
     };
     subscriberVector.push_back(subscriberInstance);
     std::string logString = "Subscriber created for " + sensor.sensorName + " listening to topic " + subscriberTopicName;

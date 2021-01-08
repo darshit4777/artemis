@@ -41,8 +41,8 @@ public:
     Robot(const ros::NodeHandle *nh);
     ~Robot();
 
-    void OdometryCallback(const nav_msgs::Odometry::ConstPtr& msg,std::string topicName);
-    void ImuCallback(const sensor_msgs::Imu::ConstPtr& msg,std::string topicName);
+    void OdometryCallback(const nav_msgs::Odometry::ConstPtr& msg, FilterBase::Sensor &sensor);
+    void ImuCallback(const sensor_msgs::Imu::ConstPtr& msg,FilterBase::Sensor &sensor);
     void ReadRosparams();
     void PublishTransform();
     void CreateMeasurementFromOdometry(const nav_msgs::Odometry);
@@ -51,6 +51,10 @@ public:
     private:
     void CreateSubscribers(FilterBase::Sensor sensor);
     void CreateSensorTopicPair(std::string sensorName);
+    
+    // TODO : Prepare a template function for this ?
+    std::vector<double> PrepareOdometryMeasurement(const nav_msgs::Odometry &msg);
+    std::vector<double> PrepareImuMeasurement(const sensor_msgs::Imu &msg);
 
     
 };
