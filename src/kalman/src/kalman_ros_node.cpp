@@ -69,7 +69,7 @@ void Robot::OdometryCallback(const nav_msgs::Odometry::ConstPtr& msg,FilterBase:
      * The prepare odometry measurement function carries out all the necessary assignments
      */
     nav_msgs::Odometry odomMsg = *msg;
-    sensor.UpdateMeasurements(PrepareOdometryMeasurement(odomMsg));
+    sensor.UpdateMeasurements(Robot::PrepareOdometryMeasurement(odomMsg));
     return;
 };
 
@@ -128,14 +128,14 @@ void Robot::ImuCallback(const sensor_msgs::Imu::ConstPtr& msg,FilterBase::Sensor
      * 
      * The prepare imu measurement function carries out all the necessary assignments
      */
-    
+
     // General Callback for IMU subscriber
     sensor_msgs::Imu imuMsg = *msg;
-    sensor.UpdateMeasurements(PrepareImuMeasurement(imuMsg));
+    sensor.UpdateMeasurements(Robot::PrepareImuMeasurement(imuMsg));
     return;
 };
 
-std::vector<double> PrepareImuMeasurement(const sensor_msgs::Imu &imuMsg)
+std::vector<double> Robot::PrepareImuMeasurement(const sensor_msgs::Imu &imuMsg)
 {
     // Prepare a measurement using IMU data
     std::vector<double> measurementVector;

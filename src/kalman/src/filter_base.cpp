@@ -67,7 +67,7 @@ void FilterBase::AssignSensorParams(YAML::Node& paramList)
     return;
 }
 
-void FilterBase::CreateMeasurementMatrix(FilterBase::Sensor& sensor)
+void FilterBase::CreateMeasurementMatrix(FilterBase::Sensor &sensor)
 {
     // For the argument sensor, we will create the measurement matrix
     Eigen::MatrixXd measurementMatrix;
@@ -122,8 +122,12 @@ void FilterBase::Sensor::UpdateMeasurements(std::vector<double> measurement)
 
     // Map the data of the std::vector to the Eigen Matrix
     this->measurementVector = Eigen::Map<Eigen::Matrix<double,15,1>>(measurement.data());
+
+    // Multiply the given measurements with the activation vector to create the actual measurement
+    this->measurementMatrix = this->measurementMatrix * this->measurementVector;
     return;
 }
+
 //int main(){
 //    std::cout<<"Starting filter base"<<std::endl;
 //    FilterBase filterBase;

@@ -53,8 +53,8 @@ public:
     void CreateSensorTopicPair(std::string sensorName);
     
     // TODO : Prepare a template function for this ?
-    std::vector<double> PrepareOdometryMeasurement(const nav_msgs::Odometry &msg);
-    std::vector<double> PrepareImuMeasurement(const sensor_msgs::Imu &msg);
+    std::vector<double> PrepareOdometryMeasurement(const nav_msgs::Odometry &odomMsg);
+    std::vector<double> PrepareImuMeasurement(const sensor_msgs::Imu &imuMsg);
 
     
 };
