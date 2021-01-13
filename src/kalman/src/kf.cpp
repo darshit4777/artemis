@@ -1,5 +1,5 @@
 #include "kalman/kf.hpp"
-#include "boost.h"
+#include "boost/bind.hpp"
 
 KalmanFilter::KalmanFilter()
 {

@@ -128,18 +128,22 @@ include_directories(
 add_library(filter_base
   src/filter_base.cpp
 )
+add_library(kalman_filter
+  src/kf.cpp
+)
 
 ## Add cmake target dependencies of the library
 ## as an example, code may need to be generated before libraries
 ## either from message generation or dynamic reconfigure
 add_dependencies(filter_base ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+add_dependencies(kalman_filter ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS} filter_base)
 
 ## Declare a C++ executable
 ## With catkin_make all packages are built within a single CMake context
 ## The recommended prefix ensures that target names across packages don't collide
 #add_executable(filter_base_node src/filter_base.cpp)
 add_executable(kalman_ros_node src/kalman_ros_node.cpp)
-add_executable(kf_node src/kf.cpp)
+
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
@@ -151,7 +155,6 @@ add_executable(kf_node src/kf.cpp)
 ## same as for the library above
 #add_dependencies(filter_base_node ${${PROJECT_NAME}_EXPORTED_TARGETS}  ${catkin_EXPORTED_TARGETS})
 add_dependencies(kalman_ros_node ${${PROJECT_NAME}_EXPORTED_TARGETS}  ${catkin_EXPORTED_TARGETS} filter_base )
-add_dependencies(kf_node ${${PROJECT_NAME}_EXPORTED_TARGETS}  ${catkin_EXPORTED_TARGETS} filter_base )
 
 ## Specify libraries to link a library or executable target against
 target_link_libraries(filter_base
@@ -162,11 +165,13 @@ target_link_libraries(kalman_ros_node
   ${catkin_LIBRARIES}
   ${YAML_CPP_LIBRARIES}
   filter_base
+  kalman_filter
 )
-target_link_libraries(kf_node
+target_link_libraries(kalman_filter
   ${catkin_LIBRARIES}
   ${YAML_CPP_LIBRARIES}
   filter_base
+
 )
 
 #############

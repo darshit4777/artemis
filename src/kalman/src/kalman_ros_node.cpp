@@ -6,10 +6,6 @@
 #include "kalman/kalman_ros_node.hpp"
 #include "tf/tf.h"
 
-
-
-//#include "kalman/filter_base.hpp"
-
 Robot::Robot(const ros::NodeHandle *nh)
 {
     /**

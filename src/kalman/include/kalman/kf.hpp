@@ -41,6 +41,9 @@ class KalmanFilter : public FilterBase
     ros::Time currentMessageTime;
     ros::Time previousMessageTime;
 
+    KalmanFilter();
+    ~KalmanFilter();
+
     /**
      * @brief Executes a single prediction step
      * @return void, Makes changes to class variables  
