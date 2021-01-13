@@ -61,6 +61,15 @@ class KalmanFilter : public FilterBase
     */
 
     void ExecuteUpdateStep() override;
+
+    /**
+     * @brief Helper function that returns the current value of belief. 
+     * To be used by processes outside the class definition that need to make 
+     * use of the belief.
+     * @return belief struct consisting of belief vector and belief covariance.
+    */
+
+    belief GetBelief();
 };
 
 

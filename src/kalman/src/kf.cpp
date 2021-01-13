@@ -1,5 +1,5 @@
 #include "kalman/kf.hpp"
-
+#include "boost.h"
 
 KalmanFilter::KalmanFilter()
 {
@@ -36,23 +36,63 @@ void KalmanFilter::ExecutePredictionStep()
     ros::Duration deltaTime = currentMessageTime - previousMessageTime;
     double dt = deltaTime.toSec();
 
-    Eigen::Vector2d controlInputs;
-    double x_vel, y_vel, ang_vel;
+    // Set the control inputs - linear and angular velocity
+    
+    double x_vel, y_vel, angularVelocity;
     x_vel = m_filterBelief.beliefVector[3];
     y_vel = m_filterBelief.beliefVector[4];
-    ang_vel = m_filterBelief.beliefVector[14];
+    angularVelocity = m_filterBelief.beliefVector[14];
     double linearVelocity = pow(pow(x_vel,2) + pow(y_vel,2),0.5);
-    controlInputs << linearVelocity, ang_vel;
+    
+    Eigen::Vector2d controlInputs;
+    controlInputs << linearVelocity, angularVelocity;
     
     // Prediction Step 
+    // Calculate belief vector 
     m_filterBelief.beliefVector = m_jacobianMatrixA * m_filterBelief.beliefVector + m_controlInputMatrixB * controlInputs * dt;
+
+    // Calculate the belief covariance
+    m_filterBelief.beliefCovariance = m_jacobianMatrixA * m_filterBelief.beliefCovariance * m_jacobianMatrixA.transpose() + m_motionNoiseCovarianceMatrix;
 
     return;
 
     // TODO : Put a mutex over the belief vector - it is likely going to run into scenarios where it will be read and written to 
     // at the same time.
 
+};
+
+void KalmanFilter::ExecuteUpdateStep()
+{   
+    // Executes the update step for each sensor
+    std:for_each(m_sensorVector.begin(),m_sensorVector.end(),boost::bind(&KalmanFilter::ExecuteSingleUpdateStep,this,_1));
+    return;
+};
+
+void KalmanFilter::ExecuteSingleUpdateStep(FilterBase::Sensor &sensor)
+{
+    /**
+     * Here we execute the update equation for a single sensor
+    */
+
+   // Calculating Kalman Gain
+   auto inverseTerm = sensor.measurementMatrix * m_filterBelief.beliefCovariance * sensor.measurementMatrix + sensor.measurementNoiseMatrix;
+   auto kalmanGain = m_filterBelief.beliefCovariance * sensor.measurementMatrix.transpose() * (inverseTerm.inverse());
+
+   // Calculating updated belief vector
+   m_filterBelief.beliefVector = m_filterBelief.beliefVector + kalmanGain * (sensor.measurementVector - m_filterBelief.beliefCovariance * m_filterBelief.beliefVector);
+
+   // Calculating updated covariance matrix
+   m_filterBelief.beliefCovariance = m_filterBelief.beliefCovariance - kalmanGain * sensor.measurementMatrix * m_filterBelief.beliefCovariance;
+
+    return;
+};
+
+KalmanFilter::belief KalmanFilter::GetBelief()
+{
+    belief copyBelief(m_filterBelief); // Use a copy constructor assignment.
+    return copyBelief;
 }
+
 
 KalmanFilter::~KalmanFilter()
 {
