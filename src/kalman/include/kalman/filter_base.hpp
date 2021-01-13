@@ -100,9 +100,29 @@ public:
 
     /**
      * @brief Updates the state and the control vectors
-     */
+    */
 
     void UpdateFilterState(nav_msgs::Odometry odom, sensor_msgs::Imu imu);
 
+    /**
+     * @brief Executes a single prediction step
+     * @return void, Makes changes to class variables  
+    */
+
+    virtual void ExecutePredictionStep() = 0;
+
+    /**
+     * @brief Executes a single update step for a given sensor
+     * @return void, Makes changes to the belief variables
+    */
+
+    virtual void ExecuteSingleUpdateStep(FilterBase::Sensor &sensor) = 0;
+    
+    /**
+     * @brief Execute update for all available sensors;
+     * @return void, Makes changes to the belief variables
+    */
+
+    virtual void ExecuteUpdateStep() = 0;
 
 };

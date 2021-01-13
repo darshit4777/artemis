@@ -8,7 +8,8 @@
 #include "tf2_ros/transform_broadcaster.h"
 #include "nav_msgs/Odometry.h"
 #include "sensor_msgs/Imu.h"
-#include "kalman/filter_base.hpp"
+//#include "kalman/filter_base.hpp"
+#include "kf.hpp"
 
 class Robot
 {
@@ -33,7 +34,7 @@ public:
     nav_msgs::Odometry m_robotFilteredOdometry;
 
     
-    FilterBase m_filterBase;
+    KalmanFilter m_kalmanFilter;
     /**
      * @brief Class constructor. Initializes the class and assigns the nodehandle.
      * Sets the rosparams and starts the filter timer

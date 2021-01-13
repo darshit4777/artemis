@@ -23,7 +23,7 @@ Robot::Robot(const ros::NodeHandle *nh)
     ReadRosparams();
     
     // Create subscribers and assign callbacks for each sensor type.
-    std::for_each(m_filterBase.m_sensorVector.begin(),m_filterBase.m_sensorVector.end(),
+    std::for_each(m_kalmanFilter.m_sensorVector.begin(),m_kalmanFilter.m_sensorVector.end(),
     boost::bind(&Robot::CreateSubscribers,this,_1));    
 
     // Assigning the publisher
@@ -40,7 +40,7 @@ void Robot::ReadRosparams()
      */
     
     // Create a sensor name-topic pair for each sensor
-    std::for_each(m_filterBase.m_sensorList.begin(),m_filterBase.m_sensorList.end(),
+    std::for_each(m_kalmanFilter.m_sensorList.begin(),m_kalmanFilter.m_sensorList.end(),
     boost::bind(&Robot::CreateSensorTopicPair,this,_1));
     
 
