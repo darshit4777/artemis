@@ -20,7 +20,7 @@ FilterBase::FilterBase()
 
 YAML::Node FilterBase::ReadParams(){
     ROS_INFO("Reading params to setup filter");
-    YAML::Node paramList = YAML::LoadFile("/home/darshit/slam-workspace/Code/robot-navigation/src/kalman/config/filter_params.yaml");
+    YAML::Node paramList = YAML::LoadFile("/home/darshit/artemis-workspace/Code/artemis/src/kalman/config/filter_params.yaml");
     return paramList;
 };
 
@@ -118,6 +118,9 @@ void FilterBase::Sensor::UpdateMeasurements(std::vector<double> measurement)
 
     // Multiply the given measurements with the activation vector to create the actual measurement
     this->measurementMatrix = this->measurementMatrix * this->measurementVector;
+
+    // Set the time of update
+    this->updateTime = std::clock();
     return;
 }
 

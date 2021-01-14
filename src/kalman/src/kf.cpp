@@ -74,6 +74,15 @@ void KalmanFilter::ExecuteSingleUpdateStep(FilterBase::Sensor &sensor)
      * Here we execute the update equation for a single sensor
     */
 
+   // Check if the sensor information is stale. If so, we don't use the sensor information.
+
+   std::clock_t currentTime = std::clock();
+   double timeFromLastUpdate = (currentTime - sensor.updateTime) / (double) CLOCKS_PER_SEC;
+   if( timeFromLastUpdate > 0.5)
+   {
+       std::cout<<"[WARNING] Information from "<<sensor.sensorName<<" sensor is stale and won't be fused"<<std::endl;
+       return;
+   }
    // Calculating Kalman Gain
    auto inverseTerm = sensor.measurementMatrix * m_filterBelief.beliefCovariance * sensor.measurementMatrix + sensor.measurementNoiseMatrix;
    auto kalmanGain = m_filterBelief.beliefCovariance * sensor.measurementMatrix.transpose() * (inverseTerm.inverse());

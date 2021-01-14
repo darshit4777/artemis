@@ -9,6 +9,9 @@
 #include "nav_msgs/Odometry.h"
 #include "sensor_msgs/Imu.h"
 #include "yaml-cpp/node/node.h"
+#include <chrono>
+#include <ctime>
+
 class FilterBase
 {
 private:
@@ -37,6 +40,8 @@ public:
         Eigen::MatrixXd measurementNoiseMatrix;
         Eigen::MatrixXd measurementMatrix;
         Eigen::MatrixXd measurementVector;
+        std::clock_t updateTime;
+        
 
         void UpdateMeasurements(std::vector<double> measurement);
 

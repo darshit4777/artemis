@@ -1,11 +1,10 @@
 sensor_list:
   - wheel_odometry
   - imu1
-  - imu2
-
+  
 sensor_properties:
   wheel_odometry:
-    sensor_topic: "/boxer_velocity_controller/odom"
+    sensor_topic: "/husky_velocity_controller/odom"
     sensor_type: "odometry"
     measurements: [ true  , true,   false,
                     true  , true,   false,
@@ -29,7 +28,7 @@ sensor_properties:
                               0.0  ,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  1e-3]
 
   imu1:
-    sensor_topic: "/vectornav/imu"
+    sensor_topic: "/imu/data"
     sensor_type: "imu"
     measurements: [ false , false , false,
                     false , false , false,

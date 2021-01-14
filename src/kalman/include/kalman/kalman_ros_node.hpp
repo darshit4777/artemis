@@ -32,6 +32,7 @@ public:
     nav_msgs::Odometry m_robotRawOdometry;
     nav_msgs::Odometry m_robotFilteredOdometry;
 
+    ros::Timer filterPublishTimer;
     
     KalmanFilter m_kalmanFilter;
     /**
@@ -44,7 +45,8 @@ public:
     void OdometryCallback(const nav_msgs::Odometry::ConstPtr& msg, FilterBase::Sensor &sensor);
     void ImuCallback(const sensor_msgs::Imu::ConstPtr& msg,FilterBase::Sensor &sensor);
     void ReadRosparams();
-    void PublishTransform();
+    void PublishFilteredBelief();
+    nav_msgs::Odometry ConvertBeliefToOdometry(KalmanFilter::belief &belief);
     void CreateMeasurementFromOdometry(const nav_msgs::Odometry);
     void CreateMeasurementFromImu(const sensor_msgs::Imu);
 

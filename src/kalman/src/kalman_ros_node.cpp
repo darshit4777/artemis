@@ -24,7 +24,7 @@ Robot::Robot(const ros::NodeHandle *nh)
 
     // Assigning the publisher
     _filteredOdometryPublisher = 
-    _nodehandle.advertise<nav_msgs::Odometry>("/filtered_odometry_topic",10);
+    _nodehandle.advertise<nav_msgs::Odometry>("/filtered_odometry",10);
 
     return;
 };
@@ -174,8 +174,52 @@ std::vector<double> Robot::PrepareImuMeasurement(const sensor_msgs::Imu &imuMsg)
 
 }
 
-void Robot::PublishTransform()
+nav_msgs::Odometry Robot::ConvertBeliefToOdometry(KalmanFilter::belief &belief)
 {
+    nav_msgs::Odometry filteredOdom;
+    filteredOdom.child_frame_id = "base_link";
+    filteredOdom.header.frame_id = "map";
+    
+    // Assign positions
+    filteredOdom.pose.pose.position.x = belief.beliefVector[0];
+    filteredOdom.pose.pose.position.y = belief.beliefVector[1];
+    filteredOdom.pose.pose.position.z = belief.beliefVector[2];
+
+    // Assign velocity
+    filteredOdom.twist.twist.linear.x = belief.beliefVector[3];
+    filteredOdom.twist.twist.linear.y = belief.beliefVector[4];
+    filteredOdom.twist.twist.linear.z = belief.beliefVector[5];
+
+    filteredOdom.twist.twist.angular.x = belief.beliefVector[12];
+    filteredOdom.twist.twist.angular.y = belief.beliefVector[13];
+    filteredOdom.twist.twist.angular.z = belief.beliefVector[14];
+
+    // Assign orientation
+    double yaw, pitch, roll = 0.0;
+    yaw = belief.beliefVector[11];
+    pitch = belief.beliefVector[10];
+    roll = belief.beliefVector[9];
+
+    // TODO : Use estimates of yaw pitch and roll to compute a quaternion
+
+    double qW = cos(yaw/2);
+    double qZ = sin(yaw/2);
+
+    filteredOdom.pose.pose.orientation.x = 0.0;
+    filteredOdom.pose.pose.orientation.y = 0.0;
+    filteredOdom.pose.pose.orientation.z = qZ;
+    filteredOdom.pose.pose.orientation.w = qW;
+    
+    // Timestamp
+    filteredOdom.header.stamp = ros::Time::now();
+
+    return filteredOdom;
+};
+
+
+void Robot::PublishFilteredBelief()
+{
+    /**
     geometry_msgs::TransformStamped robotTransform;
     // Assigning the correct frame ids for the transform
     robotTransform.child_frame_id = m_robotFrame;
@@ -195,6 +239,10 @@ void Robot::PublishTransform()
 
     // Send it !    
     this->_transfromBroadcaster.sendTransform(robotTransform);
+    */
+    KalmanFilter::belief filteredBelief = m_kalmanFilter.GetBelief();
+    nav_msgs::Odometry odomMsg = ConvertBeliefToOdometry(filteredBelief);
+    _filteredOdometryPublisher.publish(odomMsg);
     return;
 };
 
@@ -248,6 +296,13 @@ int main(int argc, char **argv)
     ros::init(argc,argv,"kalman_ros_node");
     ros::NodeHandle nh;
     Robot kalman(&nh);
-    ros::spin();
+    while(ros::ok())
+    {
+        kalman.m_kalmanFilter.ExecutePredictionStep();
+        kalman.m_kalmanFilter.ExecuteUpdateStep();
+        kalman.PublishFilteredBelief();
+        ros::spinOnce();
+    }
+    
     return 0;
 }
