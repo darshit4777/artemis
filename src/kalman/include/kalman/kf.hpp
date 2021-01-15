@@ -74,6 +74,13 @@ class KalmanFilter : public FilterBase
     */
 
     belief GetBelief();
+    
+    /**
+     * @brief Function which updates the control input vector on the basis of updated 
+     * control input variables
+     * @return void, updates the member m_controlInputVector
+    */
+    void UpdateControlInputVector();
 };
 
 

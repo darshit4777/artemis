@@ -32,6 +32,16 @@ void FilterBase::AssignSensorParams(YAML::Node& paramList)
     // Load all the sensor properties into one YAML node.
     auto sensor_properties_list = paramList["sensor_properties"];
     
+    std::vector<double> vectorizedMotionNoise;
+    vectorizedMotionNoise = paramList["process_noise_covariance"].as<std::vector<double>>();
+    m_motionNoiseCovarianceMatrix.resize(15,15);
+    m_motionNoiseCovarianceMatrix = Eigen::Map<Eigen::Matrix<double,15,15>>(vectorizedMotionNoise.data());
+
+    std::vector<double> vectorizedInitialCovariance;
+    
+    // TODO : add initial covariance as a part of the filter belief. For this it is necessary to add filter 
+    // belief to the base class.
+    
     // TODO : implement a check for all sensors available in the sensor list 
     // to be present in the sensor_properties_list. To raise an exception if 
     // not present

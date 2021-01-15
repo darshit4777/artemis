@@ -5,6 +5,8 @@
 #include "geometry_msgs/Quaternion.h"
 #include "kalman/kalman_ros_node.hpp"
 #include "tf/tf.h"
+#include "yaml-cpp/node/node.h"
+#include "yaml-cpp/yaml.h"
 
 Robot::Robot(const ros::NodeHandle *nh)
 {
@@ -254,6 +256,7 @@ void Robot::CreateSubscribers(FilterBase::Sensor sensor)
     
     // Find the relevant topic of the sensor from the sensor name-topic pair map
     std::string subscriberTopicName = m_sensorSet[sensor.sensorName];
+    ROS_INFO_STREAM(subscriberTopicName);
     std::string sensorType = sensor.sensorType;
 
     if(sensorType == "odometry"){
@@ -280,12 +283,17 @@ void Robot::CreateSubscribers(FilterBase::Sensor sensor)
 void Robot::CreateSensorTopicPair(std::string sensorName)
 {
     std::string sensorTopicName;
-    std::string paramName = "sensor_properties/" + sensorName +"/sensor_topic";
-    _nodehandle.getParam(paramName,sensorTopicName);
+    // TODO : Fix the path so that we have to refer to the config folder only
+    YAML::Node paramList = YAML::LoadFile("/home/darshit/artemis-workspace/Code/artemis/src/kalman/config/filter_params.yaml");
+    YAML::Node sensor_properties = paramList["sensor_properties"];
+    YAML::Node sensor = sensor_properties[sensorName];
+    sensorTopicName = sensor["sensor_topic"].as<std::string>();
+
     std::pair<std::string,std::string> sensorNameTopicPair;
     sensorNameTopicPair.first = sensorName;
     sensorNameTopicPair.second = sensorTopicName;
-
+    ROS_INFO_STREAM(sensorNameTopicPair.first);
+    ROS_INFO_STREAM(sensorNameTopicPair.second);
     m_sensorSet.insert(sensorNameTopicPair);
 };
 

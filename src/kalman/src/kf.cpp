@@ -21,18 +21,26 @@ KalmanFilter::KalmanFilter()
 
     // Setting the control input vector for a Kalman Filter 
     // All measurements which are first and higher order derivatives are considered as control inputs
-    m_controlVector.resize(9,1);
+    m_controlInputVector.resize(9,1);
     // Setting the control input matrix for a Kalman Filter
     m_controlInputMatrixB.resize(15,9);
     m_controlInputMatrixB.setZero();
-          
-    
-    // TODO : , control vector and matrix are hardcoded - need a better way to incorporate them 
+    Eigen::MatrixXd identity9;
+    identity9.resize(9,9);
+    identity9.setIdentity();
+    m_controlInputMatrixB.block<9,9>(0,0) = identity9; 
     
     currentMessageTime = ros::Time::now();
     previousMessageTime = ros::Time::now();                                               
     return;
 };
+
+void KalmanFilter::UpdateControlInputVector()
+{   
+
+    m_controlInputVector = m_filterBelief.beliefVector.block<9,1>(6,0);   
+    return;
+}
 
 void KalmanFilter::ExecutePredictionStep()
 {   
@@ -41,20 +49,12 @@ void KalmanFilter::ExecutePredictionStep()
     ros::Duration deltaTime = currentMessageTime - previousMessageTime;
     double dt = deltaTime.toSec();
 
-    // Set the control inputs - linear and angular velocity
-    
-    double x_vel, y_vel, angularVelocity;
-    x_vel = m_filterBelief.beliefVector[3];
-    y_vel = m_filterBelief.beliefVector[4];
-    angularVelocity = m_filterBelief.beliefVector[14];
-    double linearVelocity = pow(pow(x_vel,2) + pow(y_vel,2),0.5);
-    
-    Eigen::Vector2d controlInputs;
-    controlInputs << linearVelocity, angularVelocity;
+    // Update the control input vector
+    UpdateControlInputVector();
     
     // Prediction Step 
     // Calculate belief vector 
-    m_filterBelief.beliefVector = m_jacobianMatrixA * m_filterBelief.beliefVector + m_controlInputMatrixB * controlInputs * dt;
+    m_filterBelief.beliefVector = m_jacobianMatrixA * m_filterBelief.beliefVector + m_controlInputMatrixB * m_controlInputVector * dt;
     // Calculate the belief covariance
     m_filterBelief.beliefCovariance = m_jacobianMatrixA * m_filterBelief.beliefCovariance * m_jacobianMatrixA.transpose() + m_motionNoiseCovarianceMatrix;
 
@@ -88,7 +88,7 @@ void KalmanFilter::ExecuteSingleUpdateStep(FilterBase::Sensor &sensor)
        return;
    }
    // Calculating Kalman Gain
-   auto inverseTerm = sensor.measurementMatrix * m_filterBelief.beliefCovariance * sensor.measurementMatrix + sensor.measurementNoiseMatrix;
+   auto inverseTerm = sensor.measurementMatrix * m_filterBelief.beliefCovariance * sensor.measurementMatrix.transpose() + sensor.measurementNoiseMatrix;
    auto kalmanGain = m_filterBelief.beliefCovariance * sensor.measurementMatrix.transpose() * (inverseTerm.inverse());
 
    // Calculating updated belief vector
