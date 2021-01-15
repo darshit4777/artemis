@@ -37,6 +37,7 @@ class KalmanFilter : public FilterBase
     belief m_filterBelief;
     Eigen::MatrixXd m_jacobianMatrixA;
     Eigen::MatrixXd m_controlInputMatrixB;
+    Eigen::VectorXd m_controlInputVector;
 
     ros::Time currentMessageTime;
     ros::Time previousMessageTime;

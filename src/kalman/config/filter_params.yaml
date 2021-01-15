@@ -6,10 +6,10 @@ sensor_properties:
   wheel_odometry:
     sensor_topic: "/husky_velocity_controller/odom"
     sensor_type: "odometry"
-    measurements: [ true  , true,   false,
-                    true  , true,   false,
-                    false , false,  false,
-                    false , false,  false,
+    measurements: [ false  , false,   false,
+                    false  , false,   false,
+                    true , true,  false,
+                    false , false,  true,
                     false , false,  false]
     measurement_covariance: [ 1e-3  ,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,
                               0.0  ,  1e-3,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,
@@ -32,9 +32,9 @@ sensor_properties:
     sensor_type: "imu"
     measurements: [ false , false , false,
                     false , false , false,
-                    true  , true  , true,
                     false , false , false,
-                    false , false , false]
+                    false , false , true,
+                    true  , true  , false]
     measurement_covariance: [ 1e-3  ,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,
                               0.0  ,  1e-3,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,
                               0.0  ,  0.0,  1e-3,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,
@@ -56,9 +56,9 @@ sensor_properties:
     sensor_type: "imu"
     measurements: [ false , false , false,
                     false , false , false,
-                    true  , true  , true,
                     false , false , false,
-                    false , false , false]
+                    false , false , true,
+                    true  , true  , false]
     measurement_covariance: [ 1e-3  ,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,
                               0.0  ,  1e-3,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,
                               0.0  ,  0.0,  1e-3,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0,

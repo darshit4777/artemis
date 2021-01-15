@@ -76,16 +76,6 @@ std::vector<double> Robot::PrepareOdometryMeasurement(const nav_msgs::Odometry &
     measurementVector[1] = odomMsg.pose.pose.position.y;
     measurementVector[2] = odomMsg.pose.pose.position.z;
 
-    // Velocities
-    measurementVector[3] = odomMsg.twist.twist.linear.x;
-    measurementVector[4] = odomMsg.twist.twist.linear.y;
-    measurementVector[5] = odomMsg.twist.twist.linear.z;
-
-    // Accelerations
-    measurementVector[6] = 0.0;
-    measurementVector[7] = 0.0;
-    measurementVector[8] = 0.0;
-
     // Orientations
     // TODO : Currently we make the assumption of 2D motion only. This means, 
     // Pitch and roll will be ignored. Yaw will be given most importance.
@@ -97,14 +87,24 @@ std::vector<double> Robot::PrepareOdometryMeasurement(const nav_msgs::Odometry &
     Eigen::AngleAxis<double> angleAxis(q); 
     
     // This is probably a bad way of doing things 
-    measurementVector[9] = 0.0;
-    measurementVector[10] = 0.0;
-    measurementVector[11] = angleAxis.angle();
-    
+    measurementVector[3] = 0.0;
+    measurementVector[4] = 0.0;
+    measurementVector[5] = angleAxis.angle();
+        
+    // Velocities
+    measurementVector[6] = odomMsg.twist.twist.linear.x;
+    measurementVector[7] = odomMsg.twist.twist.linear.y;
+    measurementVector[8] = odomMsg.twist.twist.linear.z;
+
     // Angular Velocities
-    measurementVector[12] = odomMsg.twist.twist.angular.x;
-    measurementVector[13] = odomMsg.twist.twist.angular.y;
-    measurementVector[14] = odomMsg.twist.twist.angular.z;
+    measurementVector[9] = odomMsg.twist.twist.angular.x;
+    measurementVector[10] = odomMsg.twist.twist.angular.y;
+    measurementVector[11] = odomMsg.twist.twist.angular.z;
+    
+    // Accelerations
+    measurementVector[12] = 0.0;
+    measurementVector[13] = 0.0;
+    measurementVector[14] = 0.0;
 
     return measurementVector;
 }
@@ -140,16 +140,6 @@ std::vector<double> Robot::PrepareImuMeasurement(const sensor_msgs::Imu &imuMsg)
     measurementVector[1] = 0.0;
     measurementVector[2] = 0.0;
 
-    // Velocities
-    measurementVector[3] = 0.0;
-    measurementVector[4] = 0.0;
-    measurementVector[5] = 0.0;
-
-    // AccelerationsimuMsg.linear_acceleration.x
-    measurementVector[6] = imuMsg.linear_acceleration.x;
-    measurementVector[7] = imuMsg.linear_acceleration.y;
-    measurementVector[8] = imuMsg.linear_acceleration.z;
-
     // Orientations
     // TODO : Currently we make the assumption of 2D motion only. This means, 
     // Pitch and roll will be ignored. Yaw will be given most importance.
@@ -161,14 +151,25 @@ std::vector<double> Robot::PrepareImuMeasurement(const sensor_msgs::Imu &imuMsg)
     Eigen::AngleAxis<double> angleAxis(q); 
     
     // This is probably a bad way of doing things 
-    measurementVector[9] = 0.0;
-    measurementVector[10] = 0.0;
-    measurementVector[11] = angleAxis.angle();
-    
+    measurementVector[3] = 0.0;
+    measurementVector[4] = 0.0;
+    measurementVector[5] = angleAxis.angle();
+
+    // Velocities
+    measurementVector[6] = 0.0;
+    measurementVector[7] = 0.0;
+    measurementVector[8] = 0.0;
+
     // Angular Velocities
-    measurementVector[12] = imuMsg.angular_velocity.x;
-    measurementVector[13] = imuMsg.angular_velocity.y;
-    measurementVector[14] = imuMsg.angular_velocity.z;
+    measurementVector[9] = imuMsg.angular_velocity.x;
+    measurementVector[10] = imuMsg.angular_velocity.y;
+    measurementVector[11] = imuMsg.angular_velocity.z;
+    
+    
+    // AccelerationsimuMsg.linear_acceleration.x
+    measurementVector[12] = imuMsg.linear_acceleration.x;
+    measurementVector[13] = imuMsg.linear_acceleration.y;
+    measurementVector[14] = imuMsg.linear_acceleration.z;
 
     return measurementVector;
 
@@ -185,20 +186,11 @@ nav_msgs::Odometry Robot::ConvertBeliefToOdometry(KalmanFilter::belief &belief)
     filteredOdom.pose.pose.position.y = belief.beliefVector[1];
     filteredOdom.pose.pose.position.z = belief.beliefVector[2];
 
-    // Assign velocity
-    filteredOdom.twist.twist.linear.x = belief.beliefVector[3];
-    filteredOdom.twist.twist.linear.y = belief.beliefVector[4];
-    filteredOdom.twist.twist.linear.z = belief.beliefVector[5];
-
-    filteredOdom.twist.twist.angular.x = belief.beliefVector[12];
-    filteredOdom.twist.twist.angular.y = belief.beliefVector[13];
-    filteredOdom.twist.twist.angular.z = belief.beliefVector[14];
-
     // Assign orientation
     double yaw, pitch, roll = 0.0;
-    yaw = belief.beliefVector[11];
-    pitch = belief.beliefVector[10];
-    roll = belief.beliefVector[9];
+    yaw = belief.beliefVector[3];
+    pitch = belief.beliefVector[4];
+    roll = belief.beliefVector[5];
 
     // TODO : Use estimates of yaw pitch and roll to compute a quaternion
 
@@ -210,6 +202,15 @@ nav_msgs::Odometry Robot::ConvertBeliefToOdometry(KalmanFilter::belief &belief)
     filteredOdom.pose.pose.orientation.z = qZ;
     filteredOdom.pose.pose.orientation.w = qW;
     
+    // Assign velocity
+    filteredOdom.twist.twist.linear.x = belief.beliefVector[6];
+    filteredOdom.twist.twist.linear.y = belief.beliefVector[7];
+    filteredOdom.twist.twist.linear.z = belief.beliefVector[8];
+
+    filteredOdom.twist.twist.angular.x = belief.beliefVector[9];
+    filteredOdom.twist.twist.angular.y = belief.beliefVector[10];
+    filteredOdom.twist.twist.angular.z = belief.beliefVector[11];
+
     // Timestamp
     filteredOdom.header.stamp = ros::Time::now();
 

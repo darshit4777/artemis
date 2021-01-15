@@ -19,11 +19,16 @@ KalmanFilter::KalmanFilter()
     m_jacobianMatrixA.resize(15,15);
     m_jacobianMatrixA.setIdentity();
 
+    // Setting the control input vector for a Kalman Filter 
+    // All measurements which are first and higher order derivatives are considered as control inputs
+    m_controlVector.resize(9,1);
     // Setting the control input matrix for a Kalman Filter
-    m_controlInputMatrixB.resize(3,2);
-    m_controlInputMatrixB << 1 , 0 ,
-                             0 , 0 ,
-                             0 , 1 ;      
+    m_controlInputMatrixB.resize(15,9);
+    m_controlInputMatrixB.setZero();
+          
+    
+    // TODO : , control vector and matrix are hardcoded - need a better way to incorporate them 
+    
     currentMessageTime = ros::Time::now();
     previousMessageTime = ros::Time::now();                                               
     return;
@@ -50,7 +55,6 @@ void KalmanFilter::ExecutePredictionStep()
     // Prediction Step 
     // Calculate belief vector 
     m_filterBelief.beliefVector = m_jacobianMatrixA * m_filterBelief.beliefVector + m_controlInputMatrixB * controlInputs * dt;
-
     // Calculate the belief covariance
     m_filterBelief.beliefCovariance = m_jacobianMatrixA * m_filterBelief.beliefCovariance * m_jacobianMatrixA.transpose() + m_motionNoiseCovarianceMatrix;
 
