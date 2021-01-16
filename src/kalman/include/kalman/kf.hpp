@@ -29,12 +29,6 @@ class KalmanFilter : public FilterBase
 
     public:
     
-    struct belief{
-        Eigen::VectorXd beliefVector;
-        Eigen::MatrixXd beliefCovariance;
-    };
-
-    belief m_filterBelief;
     Eigen::MatrixXd m_jacobianMatrixA;
     Eigen::MatrixXd m_controlInputMatrixB;
     Eigen::VectorXd m_controlInputVector;

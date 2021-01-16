@@ -13,7 +13,7 @@ FilterBase::FilterBase()
     FilterBase::AssignSensorParams(paramList);
     // Create measurement matrix.
     // We use the for each function 
-    std::for_each(m_sensorVector.begin(),m_sensorVector.end(),boost::bind(&FilterBase::CreateMeasurementMatrix,this,_1));
+    std::for_each(m_sensorVector.begin(),m_sensorVector.end(),boost::bind(&FilterBase::CreateSensorModelMatrix,this,_1));
     std::cout<<"Filter Base has completed initialization"<<std::endl;
     return;
 };
@@ -37,10 +37,13 @@ void FilterBase::AssignSensorParams(YAML::Node& paramList)
     m_motionNoiseCovarianceMatrix.resize(15,15);
     m_motionNoiseCovarianceMatrix = Eigen::Map<Eigen::Matrix<double,15,15>>(vectorizedMotionNoise.data());
 
+    // Initialize the initial belief as well.
     std::vector<double> vectorizedInitialCovariance;
+    vectorizedInitialCovariance = paramList["initial_covariance"].as<std::vector<double>>();
     
-    // TODO : add initial covariance as a part of the filter belief. For this it is necessary to add filter 
-    // belief to the base class.
+    m_filterBelief.beliefCovariance = Eigen::Map<Eigen::Matrix<double,15,15>>(vectorizedInitialCovariance.data());
+    m_filterBelief.beliefVector.resize(15,1);
+    m_filterBelief.beliefVector.setZero();
     
     // TODO : implement a check for all sensors available in the sensor list 
     // to be present in the sensor_properties_list. To raise an exception if 
@@ -60,9 +63,7 @@ void FilterBase::AssignSensorParams(YAML::Node& paramList)
         
         // Assign the sensor noise covariance matrix
         std::vector<double> vectorizedMeasurementNoise;
-        vectorizedMeasurementNoise = sensor_properties["measurement_covariance"].as<std::vector<double>>(); 
-        sensorInstance.measurementNoiseMatrix.resize(15,15);
-        sensorInstance.measurementNoiseMatrix = Eigen::Map<Eigen::Matrix<double,15,15>>(vectorizedMeasurementNoise.data());  
+        vectorizedMeasurementNoise = sensor_properties["measurement_covariance"].as<std::vector<double>>();   
 
         // Add the sensor to the list of available sensors
         m_sensorVector.push_back(sensorInstance);  
@@ -70,14 +71,14 @@ void FilterBase::AssignSensorParams(YAML::Node& paramList)
     return;
 }
 
-void FilterBase::CreateMeasurementMatrix(FilterBase::Sensor &sensor)
+void FilterBase::CreateSensorModelMatrix(FilterBase::Sensor &sensor)
 {
     // For the argument sensor, we will create the measurement matrix
-    Eigen::MatrixXd measurementMatrix;
+    Eigen::MatrixXd sensorModelMatrix;
     int stateSize = 15;
     int measurementSize = std::count(sensor.sensorInputVector.begin(),sensor.sensorInputVector.end(),true);
-    measurementMatrix.resize(measurementSize,stateSize);
-    measurementMatrix.setZero();
+    sensorModelMatrix.resize(measurementSize,stateSize);
+    sensorModelMatrix.setZero();
 
     std::vector<bool> copyVector = sensor.sensorInputVector;
     
@@ -97,14 +98,14 @@ void FilterBase::CreateMeasurementMatrix(FilterBase::Sensor &sensor)
         measurementVector(indexPosition) = 1.0;
 
         // Adding tte measurement vector to the measurement matrix
-        measurementMatrix.row(i) = measurementVector;
+        sensorModelMatrix.row(i) = measurementVector;
 
         // Setting the value at the generated index to zero.
         copyVector[indexPosition] = false;
     };
 
     // Assign the measurement matrix to the correct sensor
-    sensor.measurementMatrix = measurementMatrix;
+    sensor.sensorModelMatrix = sensorModelMatrix;
     return;
 };
 
@@ -113,21 +114,22 @@ FilterBase::~FilterBase()
     
 };
 
-void FilterBase::Sensor::UpdateMeasurements(std::vector<double> measurement)
+void FilterBase::Sensor::UpdateMeasurements(measurement measurement)
 {
     // This function will be used to update the internal measurement vector
     // To make things simpler we ask for measurements to be provided in a standard vector
     
     // Currently we support a full state vector only with a state size of 15 states.
-    assert(measurement.size() == 15);
+    assert(measurement.measurementVector.size() == 15);
+    
     this->measurementVector.resize(15,1);
     this->measurementVector.setZero();
 
-    // Map the data of the std::vector to the Eigen Matrix
-    this->measurementVector = Eigen::Map<Eigen::Matrix<double,15,1>>(measurement.data());
-
     // Multiply the given measurements with the activation vector to create the actual measurement
-    this->measurementMatrix = this->measurementMatrix * this->measurementVector;
+    this->measurementVector = this->sensorModelMatrix * measurement.measurementVector;
+    
+    // Assign the measurement covariance
+    this->measurementCovarianceMatrix = measurement.measurementCovariance;
 
     // Set the time of update
     this->updateTime = std::clock();

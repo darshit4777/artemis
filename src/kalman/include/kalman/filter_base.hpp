@@ -37,15 +37,27 @@ public:
         std::string sensorType;
         std::string sensorName;
         std::vector<bool> sensorInputVector;
-        Eigen::MatrixXd measurementNoiseMatrix;
-        Eigen::MatrixXd measurementMatrix;
+        Eigen::MatrixXd measurementCovarianceMatrix;
+        Eigen::MatrixXd sensorModelMatrix;
         Eigen::MatrixXd measurementVector;
         std::clock_t updateTime;
-        
 
-        void UpdateMeasurements(std::vector<double> measurement);
+        struct measurement{
+            Eigen::VectorXd measurementVector;
+            Eigen::MatrixXd measurementCovariance;
+        };    
+
+        void UpdateMeasurements(measurement measurement);
 
     };
+    
+    struct belief{
+        Eigen::VectorXd beliefVector;
+        Eigen::MatrixXd beliefCovariance;
+    };
+    
+    belief m_filterBelief;
+    
     std::vector<std::string> m_sensorList;
 
     std::vector<FilterBase::Sensor> m_sensorVector; //< Vector which holds all sensor information.
@@ -56,14 +68,10 @@ public:
 
     Eigen::MatrixXd m_stateMatrix;  //< State Matrix A 
     Eigen::MatrixXd m_controlMatrix; //< Control Matrix B 
-    Eigen::MatrixXd m_measurementMatrix; //< Measurement Matrix C
 
     // # TODO : Create a method that takes in and assigns values to the noise matrices as specified
     // in rosparams.
     Eigen::MatrixXd m_motionNoiseCovarianceMatrix; //< Motion noise covariance matrix R
-    Eigen::MatrixXd m_measurementNoiseCovarianceMatrix; //< measurement noise covariance matrix Q
-    
-    Eigen::MatrixXd m_KalmanGain; //< Matrix to hold the Kalman Gain
 
     struct belief{
         std::vector<double> meanVector;
@@ -91,7 +99,7 @@ public:
     /**
      * @brief Uses the activation vector provded to create the C matrix.
      */
-    void CreateMeasurementMatrix(FilterBase::Sensor& sensor);
+    void CreateSensorModelMatrix(FilterBase::Sensor& sensor);
 
     /**
      * @brief Creates the state matrix

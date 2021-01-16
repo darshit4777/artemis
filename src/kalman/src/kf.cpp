@@ -3,17 +3,6 @@
 
 KalmanFilter::KalmanFilter()
 {
-    // Initialize the Belief
-
-    // Setting initial belief vector to zero
-    m_filterBelief.beliefVector.resize(15,1);
-    m_filterBelief.beliefVector.setZero();
-    
-    // Setting initial belief covariance to an identity matrix with value 
-    // diagonal elements as 0.1
-    m_filterBelief.beliefCovariance.resize(15,15);
-    m_filterBelief.beliefCovariance.setIdentity();
-    m_filterBelief.beliefCovariance = m_filterBelief.beliefCovariance * 0.1;
     
     // Setting the jacobian matrix to identity for Kalman Filter
     m_jacobianMatrixA.resize(15,15);
