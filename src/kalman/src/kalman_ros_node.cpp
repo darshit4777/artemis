@@ -28,6 +28,8 @@ Robot::Robot(const ros::NodeHandle *nh)
     _filteredOdometryPublisher = 
     _nodehandle.advertise<nav_msgs::Odometry>("/filtered_odometry",10);
 
+    odomRecieved = false;
+    imuRecieved = false;
     return;
 };
 
@@ -66,13 +68,15 @@ void Robot::OdometryCallback(const nav_msgs::Odometry::ConstPtr& msg,FilterBase:
      * 
      * The prepare odometry measurement function carries out all the necessary assignments
      */
+    odomRecieved = true;
     nav_msgs::Odometry odomMsg = *msg;
     sensor.UpdateMeasurements(Robot::PrepareOdometryMeasurement(odomMsg));
     return;
 };
 
-std::vector<double> Robot::PrepareOdometryMeasurement(const nav_msgs::Odometry &odomMsg){
-    std::vector<double> measurementVector;
+FilterBase::Sensor::measurement Robot::PrepareOdometryMeasurement(const nav_msgs::Odometry &odomMsg){
+    Eigen::VectorXd measurementVector;
+    measurementVector.resize(15,1);
     // Positions
     measurementVector[0] = odomMsg.pose.pose.position.x;
     measurementVector[1] = odomMsg.pose.pose.position.y;
@@ -108,7 +112,26 @@ std::vector<double> Robot::PrepareOdometryMeasurement(const nav_msgs::Odometry &
     measurementVector[13] = 0.0;
     measurementVector[14] = 0.0;
 
-    return measurementVector;
+    Eigen::MatrixXd measurementCovariance;
+    measurementCovariance.resize(12,12);
+    
+    std::vector<double> poseCovarianceVectorized;
+    std::vector<double> twistCovarianceVectorized;
+    for (auto i = odomMsg.pose.covariance.end(); i != odomMsg.pose.covariance.begin(); --i)
+    {
+        poseCovarianceVectorized.push_back(*i);
+    };
+    for (auto i = odomMsg.twist.covariance.end(); i != odomMsg.twist.covariance.begin(); --i)
+    {
+        twistCovarianceVectorized.push_back(*i);
+    };
+
+    measurementCovariance.block<6,6>(0,0) = Eigen::Map<Eigen::Matrix<double,6,6>>(poseCovarianceVectorized.data());
+    measurementCovariance.block<6,6>(6,6) = Eigen::Map<Eigen::Matrix<double,6,6>>(twistCovarianceVectorized.data());
+    FilterBase::Sensor::measurement odomMeasurement;
+    odomMeasurement.measurementVector = measurementVector;
+    odomMeasurement.measurementCovariance = measurementCovariance;
+    return odomMeasurement;
 }
 
 void Robot::ImuCallback(const sensor_msgs::Imu::ConstPtr& msg,FilterBase::Sensor &sensor)
@@ -129,14 +152,16 @@ void Robot::ImuCallback(const sensor_msgs::Imu::ConstPtr& msg,FilterBase::Sensor
 
     // General Callback for IMU subscriber
     sensor_msgs::Imu imuMsg = *msg;
+    imuRecieved = true;
     sensor.UpdateMeasurements(Robot::PrepareImuMeasurement(imuMsg));
     return;
 };
 
-std::vector<double> Robot::PrepareImuMeasurement(const sensor_msgs::Imu &imuMsg)
+FilterBase::Sensor::measurement Robot::PrepareImuMeasurement(const sensor_msgs::Imu &imuMsg)
 {
     // Prepare a measurement using IMU data
-    std::vector<double> measurementVector;
+    Eigen::VectorXd measurementVector;
+    measurementVector.resize(15,1);
     // Positions
     measurementVector[0] = 0.0;
     measurementVector[1] = 0.0;
@@ -173,7 +198,37 @@ std::vector<double> Robot::PrepareImuMeasurement(const sensor_msgs::Imu &imuMsg)
     measurementVector[13] = imuMsg.linear_acceleration.y;
     measurementVector[14] = imuMsg.linear_acceleration.z;
 
-    return measurementVector;
+    
+    Eigen::MatrixXd measurementCovariance;
+    measurementCovariance.resize(9,9);
+    std::vector<double> angularVelocityCovarianceVectorized;
+    std::vector<double> linearAccelerationCovarianceVectorized;
+    std::vector<double> orientationCovarianceVectorized;
+    
+    for (auto i = imuMsg.angular_velocity_covariance.end(); i != imuMsg.angular_velocity_covariance.begin(); --i)
+    {
+        angularVelocityCovarianceVectorized.push_back(*i);
+    };
+    for (auto i = imuMsg.linear_acceleration_covariance.end(); i != imuMsg.linear_acceleration_covariance.begin(); --i)
+    {
+        linearAccelerationCovarianceVectorized.push_back(*i);
+    };
+    for (auto i = imuMsg.orientation_covariance.end(); i != imuMsg.orientation_covariance.begin(); --i)
+    {
+        orientationCovarianceVectorized.push_back(*i);
+    };
+
+    measurementCovariance.block<3,3>(0,0) = Eigen::Map<Eigen::Matrix<double,6,6>>(orientationCovarianceVectorized.data());
+    measurementCovariance.block<3,3>(3,3) = Eigen::Map<Eigen::Matrix<double,6,6>>(angularVelocityCovarianceVectorized.data());
+    measurementCovariance.block<3,3>(6,6) = Eigen::Map<Eigen::Matrix<double,6,6>>(linearAccelerationCovarianceVectorized.data());
+
+    
+    
+
+
+    FilterBase::Sensor::measurement measurement;
+    measurement.measurementVector = measurementVector;
+    return measurement;
 
 }
 
@@ -305,11 +360,24 @@ int main(int argc, char **argv)
     ros::init(argc,argv,"kalman_ros_node");
     ros::NodeHandle nh;
     Robot kalman(&nh);
+    
+    boost::shared_ptr<nav_msgs::Odometry const> odomCheck;
+    odomCheck = ros::topic::waitForMessage<nav_msgs::Odometry>("/husky_velocity_controller/odom");
+    ROS_INFO("Recieved odometry message");    
+    boost::shared_ptr<sensor_msgs::Imu const> imuCheck;
+    imuCheck = ros::topic::waitForMessage<sensor_msgs::Imu>("/imu/data");
+    ROS_INFO("Recieved IMU message");    
+
     while(ros::ok())
     {
-        kalman.m_kalmanFilter.ExecutePredictionStep();
-        kalman.m_kalmanFilter.ExecuteUpdateStep();
-        kalman.PublishFilteredBelief();
+        
+        if (kalman.imuRecieved && kalman.odomRecieved)
+        {
+            kalman.m_kalmanFilter.ExecutePredictionStep();
+            kalman.m_kalmanFilter.ExecuteUpdateStep();
+            kalman.PublishFilteredBelief();
+        }
+        
         ros::spinOnce();
     }
     

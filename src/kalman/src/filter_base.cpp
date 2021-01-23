@@ -59,11 +59,7 @@ void FilterBase::AssignSensorParams(YAML::Node& paramList)
         // Assign the sensor type
         sensorInstance.sensorType = sensor_properties["sensor_type"].as<std::string>();
         // Assign the sensor input vector
-        sensorInstance.sensorInputVector = sensor_properties["measurements"].as<std::vector<bool>>();
-        
-        // Assign the sensor noise covariance matrix
-        std::vector<double> vectorizedMeasurementNoise;
-        vectorizedMeasurementNoise = sensor_properties["measurement_covariance"].as<std::vector<double>>();   
+        sensorInstance.sensorInputVector = sensor_properties["measurements"].as<std::vector<bool>>();   
 
         // Add the sensor to the list of available sensors
         m_sensorVector.push_back(sensorInstance);  
@@ -120,7 +116,7 @@ void FilterBase::Sensor::UpdateMeasurements(measurement measurement)
     // To make things simpler we ask for measurements to be provided in a standard vector
     
     // Currently we support a full state vector only with a state size of 15 states.
-    assert(measurement.measurementVector.size() == 15);
+    //assert(measurement.measurementVector.size() == 15);
     
     this->measurementVector.resize(15,1);
     this->measurementVector.setZero();
@@ -130,6 +126,13 @@ void FilterBase::Sensor::UpdateMeasurements(measurement measurement)
     
     // Assign the measurement covariance
     this->measurementCovarianceMatrix = measurement.measurementCovariance;
+
+    // Issue : 
+    /**
+     * Measurement covariances need to be assigned according to the sensor Model Matrix
+    */
+   
+
 
     // Set the time of update
     this->updateTime = std::clock();

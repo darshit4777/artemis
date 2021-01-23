@@ -72,11 +72,6 @@ public:
     // # TODO : Create a method that takes in and assigns values to the noise matrices as specified
     // in rosparams.
     Eigen::MatrixXd m_motionNoiseCovarianceMatrix; //< Motion noise covariance matrix R
-
-    struct belief{
-        std::vector<double> meanVector;
-        Eigen::MatrixXd covarianceMatrix;
-    };
     belief m_inputBelief;
     belief m_outputBelief;
 

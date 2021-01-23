@@ -77,14 +77,14 @@ void KalmanFilter::ExecuteSingleUpdateStep(FilterBase::Sensor &sensor)
        return;
    }
    // Calculating Kalman Gain
-   auto inverseTerm = sensor.measurementMatrix * m_filterBelief.beliefCovariance * sensor.measurementMatrix.transpose() + sensor.measurementNoiseMatrix;
-   auto kalmanGain = m_filterBelief.beliefCovariance * sensor.measurementMatrix.transpose() * (inverseTerm.inverse());
+   auto inverseTerm = sensor.sensorModelMatrix * m_filterBelief.beliefCovariance * sensor.sensorModelMatrix.transpose() + sensor.measurementCovarianceMatrix;
+   auto kalmanGain = m_filterBelief.beliefCovariance * sensor.sensorModelMatrix.transpose() * (inverseTerm.inverse());
 
    // Calculating updated belief vector
    m_filterBelief.beliefVector = m_filterBelief.beliefVector + kalmanGain * (sensor.measurementVector - m_filterBelief.beliefCovariance * m_filterBelief.beliefVector);
 
    // Calculating updated covariance matrix
-   m_filterBelief.beliefCovariance = m_filterBelief.beliefCovariance - kalmanGain * sensor.measurementMatrix * m_filterBelief.beliefCovariance;
+   m_filterBelief.beliefCovariance = m_filterBelief.beliefCovariance - kalmanGain * sensor.sensorModelMatrix * m_filterBelief.beliefCovariance;
 
     return;
 };

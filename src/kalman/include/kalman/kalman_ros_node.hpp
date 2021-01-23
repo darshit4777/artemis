@@ -21,7 +21,8 @@ private:
     tf2_ros::TransformBroadcaster _transfromBroadcaster;
     
 public:
-    
+    bool odomRecieved;
+    bool imuRecieved;
     std::string m_robotFrame; //< Robot base link frame of reference
     std::string m_mapFrame;   //< World / map frame of reference.
     
@@ -55,8 +56,8 @@ public:
     void CreateSensorTopicPair(std::string sensorName);
     
     // TODO : Prepare a template function for this ?
-    std::vector<double> PrepareOdometryMeasurement(const nav_msgs::Odometry &odomMsg);
-    std::vector<double> PrepareImuMeasurement(const sensor_msgs::Imu &imuMsg);
+    FilterBase::Sensor::measurement PrepareOdometryMeasurement(const nav_msgs::Odometry &odomMsg);
+    FilterBase::Sensor::measurement PrepareImuMeasurement(const sensor_msgs::Imu &imuMsg);
 
     
 };
