@@ -113,8 +113,10 @@ FilterBase::Sensor::measurement Robot::PrepareOdometryMeasurement(const nav_msgs
     measurementVector[14] = 0.0;
 
     Eigen::MatrixXd measurementCovariance;
-    measurementCovariance.resize(12,12);
+    measurementCovariance.resize(15,15);
+    measurementCovariance.setZero();
     
+    // Transferring data from geometry msgs (boost arrays) to std vectors
     std::vector<double> poseCovarianceVectorized;
     std::vector<double> twistCovarianceVectorized;
     for (auto i = odomMsg.pose.covariance.end(); i != odomMsg.pose.covariance.begin(); --i)
@@ -126,6 +128,7 @@ FilterBase::Sensor::measurement Robot::PrepareOdometryMeasurement(const nav_msgs
         twistCovarianceVectorized.push_back(*i);
     };
 
+    // Mapping into an Eigen Matrix
     measurementCovariance.block<6,6>(0,0) = Eigen::Map<Eigen::Matrix<double,6,6>>(poseCovarianceVectorized.data());
     measurementCovariance.block<6,6>(6,6) = Eigen::Map<Eigen::Matrix<double,6,6>>(twistCovarianceVectorized.data());
     FilterBase::Sensor::measurement odomMeasurement;
@@ -200,7 +203,9 @@ FilterBase::Sensor::measurement Robot::PrepareImuMeasurement(const sensor_msgs::
 
     
     Eigen::MatrixXd measurementCovariance;
-    measurementCovariance.resize(9,9);
+    measurementCovariance.resize(15,15);
+    
+    // Transferring data from geometry msgs (boost arrays) to std vectors
     std::vector<double> angularVelocityCovarianceVectorized;
     std::vector<double> linearAccelerationCovarianceVectorized;
     std::vector<double> orientationCovarianceVectorized;
@@ -218,16 +223,16 @@ FilterBase::Sensor::measurement Robot::PrepareImuMeasurement(const sensor_msgs::
         orientationCovarianceVectorized.push_back(*i);
     };
 
-    measurementCovariance.block<3,3>(0,0) = Eigen::Map<Eigen::Matrix<double,6,6>>(orientationCovarianceVectorized.data());
-    measurementCovariance.block<3,3>(3,3) = Eigen::Map<Eigen::Matrix<double,6,6>>(angularVelocityCovarianceVectorized.data());
-    measurementCovariance.block<3,3>(6,6) = Eigen::Map<Eigen::Matrix<double,6,6>>(linearAccelerationCovarianceVectorized.data());
+    // Mapping into an Eigen Matrix
+    measurementCovariance.block<3,3>(3,3) = Eigen::Map<Eigen::Matrix<double,3,3>>(orientationCovarianceVectorized.data());
+    measurementCovariance.block<3,3>(9,9) = Eigen::Map<Eigen::Matrix<double,3,3>>(angularVelocityCovarianceVectorized.data());
+    measurementCovariance.block<3,3>(12,12) = Eigen::Map<Eigen::Matrix<double,3,3>>(linearAccelerationCovarianceVectorized.data());
 
     
-    
-
 
     FilterBase::Sensor::measurement measurement;
     measurement.measurementVector = measurementVector;
+    measurement.measurementCovariance = measurementCovariance;
     return measurement;
 
 }
