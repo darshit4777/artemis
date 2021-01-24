@@ -92,7 +92,7 @@ void KalmanFilter::ExecuteSingleUpdateStep(FilterBase::Sensor &sensor)
    auto kalmanGain = m_filterBelief.beliefCovariance * sensor.sensorModelMatrix.transpose() * (inverseTerm.inverse());
 
    // Calculating updated belief vector
-   m_filterBelief.beliefVector = m_filterBelief.beliefVector + kalmanGain * (sensor.measurementVector - m_filterBelief.beliefCovariance * m_filterBelief.beliefVector);
+   m_filterBelief.beliefVector = m_filterBelief.beliefVector + kalmanGain * (sensor.measurementVector - sensor.sensorModelMatrix * m_filterBelief.beliefVector);
 
    // Calculating updated covariance matrix
    m_filterBelief.beliefCovariance = m_filterBelief.beliefCovariance - kalmanGain * sensor.sensorModelMatrix * m_filterBelief.beliefCovariance;
