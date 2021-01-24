@@ -79,6 +79,7 @@ void Robot::OdometryCallback(const nav_msgs::Odometry::ConstPtr& msg,FilterBase:
 FilterBase::Sensor::measurement Robot::PrepareOdometryMeasurement(const nav_msgs::Odometry &odomMsg){
     Eigen::VectorXd measurementVector;
     measurementVector.resize(15,1);
+    measurementVector.setZero();
     // Positions
     measurementVector[0] = odomMsg.pose.pose.position.x;
     measurementVector[1] = odomMsg.pose.pose.position.y;
@@ -121,13 +122,32 @@ FilterBase::Sensor::measurement Robot::PrepareOdometryMeasurement(const nav_msgs
     // Transferring data from geometry msgs (boost arrays) to std vectors
     std::vector<double> poseCovarianceVectorized;
     std::vector<double> twistCovarianceVectorized;
-    for (auto i = odomMsg.pose.covariance.end(); i != odomMsg.pose.covariance.begin(); --i)
+    ROS_INFO_STREAM(odomMsg.pose);
+
+
+    for (auto i = odomMsg.pose.covariance.begin(); i != odomMsg.pose.covariance.end(); ++i)
     {
-        poseCovarianceVectorized.push_back(*i);
+        if(*i == 0 )
+        {
+            poseCovarianceVectorized.push_back(1e-7);    
+        }
+        else
+        {
+            poseCovarianceVectorized.push_back(*(i));
+        }
+        
     };
-    for (auto i = odomMsg.twist.covariance.end(); i != odomMsg.twist.covariance.begin(); --i)
+    for (auto i = odomMsg.twist.covariance.begin(); i != odomMsg.twist.covariance.end(); ++i)
     {
-        twistCovarianceVectorized.push_back(*i);
+        if(*i == 0)
+        {
+            twistCovarianceVectorized.push_back(1e-7);    
+        }
+        else
+        {
+            twistCovarianceVectorized.push_back(*(i));
+        }
+        
     };
 
     // Mapping into an Eigen Matrix
@@ -136,6 +156,8 @@ FilterBase::Sensor::measurement Robot::PrepareOdometryMeasurement(const nav_msgs
     FilterBase::Sensor::measurement odomMeasurement;
     odomMeasurement.measurementVector = measurementVector;
     odomMeasurement.measurementCovariance = measurementCovariance;
+    std::cout<<"Measurement covariance is "<<std::endl;
+    std::cout<<measurementCovariance<<std::endl;
     return odomMeasurement;
 }
 
@@ -169,6 +191,7 @@ FilterBase::Sensor::measurement Robot::PrepareImuMeasurement(const sensor_msgs::
     // Prepare a measurement using IMU data
     Eigen::VectorXd measurementVector;
     measurementVector.resize(15,1);
+    measurementVector.setZero();
     // Positions
     measurementVector[0] = 0.0;
     measurementVector[1] = 0.0;
@@ -208,23 +231,44 @@ FilterBase::Sensor::measurement Robot::PrepareImuMeasurement(const sensor_msgs::
     
     Eigen::MatrixXd measurementCovariance;
     measurementCovariance.resize(15,15);
+    measurementCovariance.setZero();
     
     // Transferring data from geometry msgs (boost arrays) to std vectors
     std::vector<double> angularVelocityCovarianceVectorized;
     std::vector<double> linearAccelerationCovarianceVectorized;
     std::vector<double> orientationCovarianceVectorized;
-    
-    for (auto i = imuMsg.angular_velocity_covariance.end(); i != imuMsg.angular_velocity_covariance.begin(); --i)
+    ROS_INFO_STREAM(imuMsg);
+    for (auto i = imuMsg.angular_velocity_covariance.begin(); i != imuMsg.angular_velocity_covariance.end(); ++i)
     {
-        angularVelocityCovarianceVectorized.push_back(*i);
+        if(*i == 0){
+            angularVelocityCovarianceVectorized.push_back(1e-7);    
+        }
+        else
+        {
+            angularVelocityCovarianceVectorized.push_back(*i);
+        }
     };
-    for (auto i = imuMsg.linear_acceleration_covariance.end(); i != imuMsg.linear_acceleration_covariance.begin(); --i)
-    {
-        linearAccelerationCovarianceVectorized.push_back(*i);
+    for (auto i = imuMsg.linear_acceleration_covariance.begin(); i != imuMsg.linear_acceleration_covariance.end(); ++i)
+    {   
+        if(*i == 0){
+            linearAccelerationCovarianceVectorized.push_back(1e-7);    
+        }
+        else
+        {
+            linearAccelerationCovarianceVectorized.push_back(*i);
+        }
+
     };
-    for (auto i = imuMsg.orientation_covariance.end(); i != imuMsg.orientation_covariance.begin(); --i)
+    for (auto i = imuMsg.orientation_covariance.begin(); i != imuMsg.orientation_covariance.end(); ++i)
     {
-        orientationCovarianceVectorized.push_back(*i);
+        if(*i == 0){
+            orientationCovarianceVectorized.push_back(1e-7);    
+        }
+        else
+        {
+            orientationCovarianceVectorized.push_back(*i);
+        }
+        
     };
 
     // Mapping into an Eigen Matrix
@@ -233,7 +277,7 @@ FilterBase::Sensor::measurement Robot::PrepareImuMeasurement(const sensor_msgs::
     measurementCovariance.block<3,3>(12,12) = Eigen::Map<Eigen::Matrix<double,3,3>>(linearAccelerationCovarianceVectorized.data());
 
     
-
+    std::cout<<measurementCovariance<<std::endl;
     FilterBase::Sensor::measurement measurement;
     measurement.measurementVector = measurementVector;
     measurement.measurementCovariance = measurementCovariance;
@@ -309,6 +353,8 @@ void Robot::PublishFilteredBelief()
     */
     KalmanFilter::belief filteredBelief = m_kalmanFilter.GetBelief();
     nav_msgs::Odometry odomMsg = ConvertBeliefToOdometry(filteredBelief);
+    //ROS_INFO_STREAM(m_kalmanFilter.m_filterBelief.beliefVector);
+    //ROS_INFO_STREAM(m_kalmanFilter.m_filterBelief.beliefCovariance);
     _filteredOdometryPublisher.publish(odomMsg);
     return;
 };
@@ -378,14 +424,21 @@ int main(int argc, char **argv)
     boost::shared_ptr<sensor_msgs::Imu const> imuCheck;
     imuCheck = ros::topic::waitForMessage<sensor_msgs::Imu>("/imu/data");
     ROS_INFO("Recieved IMU message");    
-
+    
+    ROS_INFO("Starting covariance");
+    ROS_INFO_STREAM(kalman.m_kalmanFilter.m_filterBelief.beliefCovariance);
     while(ros::ok())
     {
         
         if (kalman.imuRecieved && kalman.odomRecieved)
-        {
+        {   
             kalman.m_kalmanFilter.ExecutePredictionStep();
+            ROS_INFO_STREAM("After prediction");
+            ROS_INFO_STREAM(kalman.m_kalmanFilter.m_filterBelief.beliefCovariance);
+
             kalman.m_kalmanFilter.ExecuteUpdateStep();
+            ROS_INFO_STREAM("After update");
+            ROS_INFO_STREAM(kalman.m_kalmanFilter.m_filterBelief.beliefCovariance);
             kalman.PublishFilteredBelief();
         }
         

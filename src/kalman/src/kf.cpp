@@ -83,9 +83,21 @@ void KalmanFilter::ExecuteSingleUpdateStep(FilterBase::Sensor &sensor)
        std::cout<<"[WARNING] Sensor covariance for "<<sensor.sensorName<<" sensor is not filled out. skipping update "<< std::endl; 
        return;
    }
-   auto inverseTerm = sensor.sensorModelMatrix * m_filterBelief.beliefCovariance * sensor.sensorModelMatrix.transpose() + sensor.measurementCovarianceMatrix;
-   auto kalmanGain = m_filterBelief.beliefCovariance * sensor.sensorModelMatrix.transpose() * (inverseTerm.inverse());
 
+   //std::cout<<"Update step for "<<sensor.sensorName<<std::endl;
+   //std::cout<<"Belief covariance"<<std::endl;
+   //std::cout<<m_filterBelief.beliefCovariance<<std::endl;
+   auto adjustedBeliefCovariance = sensor.sensorModelMatrix * m_filterBelief.beliefCovariance * sensor.sensorModelMatrix.transpose();
+   //std::cout<<"Adjusted Belief covariance"<<std::endl;
+   //std::cout<<adjustedBeliefCovariance<<std::endl;
+   //std::cout<<"Sensor measurement covariance"<<std::endl;
+   //std::cout<<sensor.measurementCovarianceMatrix<<std::endl;
+   auto inverseTerm = adjustedBeliefCovariance + sensor.measurementCovarianceMatrix;
+   //std::cout<<"Inverse Terms"<<std::endl;
+   //std::cout<<inverseTerm<<std::endl;
+   auto kalmanGain = m_filterBelief.beliefCovariance * sensor.sensorModelMatrix.transpose() * (inverseTerm.inverse());
+   //std::cout<<"Kalman Gain"<<std::endl;
+   //std::cout<<kalmanGain<<std::endl; 
    // Calculating updated belief vector
    m_filterBelief.beliefVector = m_filterBelief.beliefVector + kalmanGain * (sensor.measurementVector - sensor.sensorModelMatrix * m_filterBelief.beliefVector);
 
