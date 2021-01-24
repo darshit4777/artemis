@@ -71,12 +71,7 @@ void Robot::OdometryCallback(const nav_msgs::Odometry::ConstPtr& msg,FilterBase:
     odomRecieved = true;
     nav_msgs::Odometry odomMsg = *msg;
     std::cout<<"Odometry Callback for "<<sensor->sensorName<<std::endl;
-    m_kalmanFilter.UpdateMeasurements(Robot::PrepareOdometryMeasurement(odomMsg),sensor);
-    //FilterBase::Sensor::measurement preparedMeasurement;
-    //preparedMeasurement = Robot::PrepareOdometryMeasurement(odomMsg);
-
-    //sensor.measurementVector = sensor.sensorModelMatrix * preparedMeasurement.measurementVector;
-    //sensor.measurementCovarianceMatrix = sensor.sensorModelMatrix * preparedMeasurement.measurementCovariance * sensor.sensorModelMatrix.transpose();
+    sensor->UpdateMeasurements(Robot::PrepareOdometryMeasurement(odomMsg));
     
     return;
 };
@@ -164,12 +159,7 @@ void Robot::ImuCallback(const sensor_msgs::Imu::ConstPtr& msg,FilterBase::Sensor
     sensor_msgs::Imu imuMsg = *msg;
     imuRecieved = true;
     std::cout<<"IMU Callback for "<<sensor->sensorName<<std::endl;
-    m_kalmanFilter.UpdateMeasurements(Robot::PrepareImuMeasurement(imuMsg),sensor);
-    //FilterBase::Sensor::measurement preparedMeasurement;
-    //preparedMeasurement = Robot::PrepareImuMeasurement(imuMsg);
-
-    //sensor.measurementVector = sensor.sensorModelMatrix * preparedMeasurement.measurementVector;
-    //sensor.measurementCovarianceMatrix = sensor.sensorModelMatrix * preparedMeasurement.measurementCovariance * sensor.sensorModelMatrix.transpose();
+    sensor->UpdateMeasurements(Robot::PrepareImuMeasurement(imuMsg));
     
     return;
 };

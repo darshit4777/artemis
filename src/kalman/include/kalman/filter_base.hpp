@@ -47,10 +47,9 @@ public:
             Eigen::MatrixXd measurementCovariance;
         };    
 
-        
-
+        void UpdateMeasurements(FilterBase::Sensor::measurement measurement);    
     };
-    void UpdateMeasurements(FilterBase::Sensor::measurement measurement,FilterBase::Sensor* sensor);
+    
     
     struct belief{
         Eigen::VectorXd beliefVector;

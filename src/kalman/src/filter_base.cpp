@@ -110,20 +110,20 @@ FilterBase::~FilterBase()
     
 };
 
-void FilterBase::UpdateMeasurements(FilterBase::Sensor::measurement measurement,FilterBase::Sensor* sensor)
+void FilterBase::Sensor::UpdateMeasurements(FilterBase::Sensor::measurement measurement)
 {
     // This function will be used to update the internal measurement vector
     // To make things simpler we ask for measurements to be provided in a standard vector
 
     // Multiply the given measurements with the sensor model matrix to create the actual measurement
-    std::cout<<"Updating measurements for "<<sensor->sensorName<<std::endl;
-    sensor->measurementVector = sensor->sensorModelMatrix * measurement.measurementVector;
+    std::cout<<"Updating measurements for "<<this->sensorName<<std::endl;
+    this->measurementVector = this->sensorModelMatrix * measurement.measurementVector;
     
     // Assign the measurement covariance
-    sensor->measurementCovarianceMatrix = sensor->sensorModelMatrix * measurement.measurementCovariance * sensor->sensorModelMatrix.transpose();
-    std::cout<<"Size of measurement covariance matrix is "<<sensor->measurementCovarianceMatrix.size()<<std::endl;
+    this->measurementCovarianceMatrix = this->sensorModelMatrix * measurement.measurementCovariance * this->sensorModelMatrix.transpose();
+    std::cout<<"Size of measurement covariance matrix is "<<this->measurementCovarianceMatrix.size()<<std::endl;
     // Set the time of update
-    sensor->updateTime = std::clock();
+    this->updateTime = std::clock();
     return;
 }
 
