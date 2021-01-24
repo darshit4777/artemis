@@ -70,7 +70,7 @@ void Robot::OdometryCallback(const nav_msgs::Odometry::ConstPtr& msg,FilterBase:
      */
     odomRecieved = true;
     nav_msgs::Odometry odomMsg = *msg;
-    std::cout<<"Odometry Callback for "<<sensor->sensorName<<std::endl;
+    //std::cout<<"Odometry Callback for "<<sensor->sensorName<<std::endl;
     sensor->UpdateMeasurements(Robot::PrepareOdometryMeasurement(odomMsg));
     
     return;
@@ -158,7 +158,7 @@ void Robot::ImuCallback(const sensor_msgs::Imu::ConstPtr& msg,FilterBase::Sensor
     // General Callback for IMU subscriber
     sensor_msgs::Imu imuMsg = *msg;
     imuRecieved = true;
-    std::cout<<"IMU Callback for "<<sensor->sensorName<<std::endl;
+    //std::cout<<"IMU Callback for "<<sensor->sensorName<<std::endl;
     sensor->UpdateMeasurements(Robot::PrepareImuMeasurement(imuMsg));
     
     return;

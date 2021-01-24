@@ -77,11 +77,6 @@ void KalmanFilter::ExecuteSingleUpdateStep(FilterBase::Sensor &sensor)
        return;
    }
    // Calculating Kalman Gain
-   std::cout<<sensor.sensorModelMatrix.size()<<std::endl;
-   std::cout<<m_filterBelief.beliefCovariance.size()<<std::endl;
-   std::cout<<sensor.measurementCovarianceMatrix.size()<<std::endl;
-   std::cout<<sensor.measurementVector.size()<<std::endl;
-   std::cout<<sensor.sensorModelMatrix.size()<<std::endl;
    if(sensor.measurementCovarianceMatrix.size() == 0)
 
    {
