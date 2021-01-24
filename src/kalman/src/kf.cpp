@@ -77,6 +77,17 @@ void KalmanFilter::ExecuteSingleUpdateStep(FilterBase::Sensor &sensor)
        return;
    }
    // Calculating Kalman Gain
+   std::cout<<sensor.sensorModelMatrix.size()<<std::endl;
+   std::cout<<m_filterBelief.beliefCovariance.size()<<std::endl;
+   std::cout<<sensor.measurementCovarianceMatrix.size()<<std::endl;
+   std::cout<<sensor.measurementVector.size()<<std::endl;
+   std::cout<<sensor.sensorModelMatrix.size()<<std::endl;
+   if(sensor.measurementCovarianceMatrix.size() == 0)
+
+   {
+       std::cout<<"[WARNING] Sensor covariance for "<<sensor.sensorName<<" sensor is not filled out. skipping update "<< std::endl; 
+       return;
+   }
    auto inverseTerm = sensor.sensorModelMatrix * m_filterBelief.beliefCovariance * sensor.sensorModelMatrix.transpose() + sensor.measurementCovarianceMatrix;
    auto kalmanGain = m_filterBelief.beliefCovariance * sensor.sensorModelMatrix.transpose() * (inverseTerm.inverse());
 

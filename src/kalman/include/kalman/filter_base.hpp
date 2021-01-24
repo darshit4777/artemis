@@ -47,9 +47,10 @@ public:
             Eigen::MatrixXd measurementCovariance;
         };    
 
-        void UpdateMeasurements(measurement measurement);
+        
 
     };
+    void UpdateMeasurements(FilterBase::Sensor::measurement measurement,FilterBase::Sensor* sensor);
     
     struct belief{
         Eigen::VectorXd beliefVector;
@@ -124,7 +125,7 @@ public:
      * @return void, Makes changes to the belief variables
     */
 
-    virtual void ExecuteSingleUpdateStep(FilterBase::Sensor &sensor) = 0;
+    virtual void ExecuteSingleUpdateStep(FilterBase::Sensor& sensor) = 0;
     
     /**
      * @brief Execute update for all available sensors;

@@ -51,7 +51,7 @@ class KalmanFilter : public FilterBase
      * @return void, Makes changes to the belief variables
     */
 
-    void ExecuteSingleUpdateStep(FilterBase::Sensor &sensor) override;
+    void ExecuteSingleUpdateStep(FilterBase::Sensor& sensor) override;
 
     /**
      * @brief Execute update for all available sensors;

@@ -52,7 +52,7 @@ void Robot::ReadRosparams()
 
 };
 
-void Robot::OdometryCallback(const nav_msgs::Odometry::ConstPtr& msg,FilterBase::Sensor &sensor)
+void Robot::OdometryCallback(const nav_msgs::Odometry::ConstPtr& msg,FilterBase::Sensor* sensor)
 {
     /**
      * General Callback for odometry subscriber
@@ -70,7 +70,14 @@ void Robot::OdometryCallback(const nav_msgs::Odometry::ConstPtr& msg,FilterBase:
      */
     odomRecieved = true;
     nav_msgs::Odometry odomMsg = *msg;
-    sensor.UpdateMeasurements(Robot::PrepareOdometryMeasurement(odomMsg));
+    std::cout<<"Odometry Callback for "<<sensor->sensorName<<std::endl;
+    m_kalmanFilter.UpdateMeasurements(Robot::PrepareOdometryMeasurement(odomMsg),sensor);
+    //FilterBase::Sensor::measurement preparedMeasurement;
+    //preparedMeasurement = Robot::PrepareOdometryMeasurement(odomMsg);
+
+    //sensor.measurementVector = sensor.sensorModelMatrix * preparedMeasurement.measurementVector;
+    //sensor.measurementCovarianceMatrix = sensor.sensorModelMatrix * preparedMeasurement.measurementCovariance * sensor.sensorModelMatrix.transpose();
+    
     return;
 };
 
@@ -137,7 +144,7 @@ FilterBase::Sensor::measurement Robot::PrepareOdometryMeasurement(const nav_msgs
     return odomMeasurement;
 }
 
-void Robot::ImuCallback(const sensor_msgs::Imu::ConstPtr& msg,FilterBase::Sensor &sensor)
+void Robot::ImuCallback(const sensor_msgs::Imu::ConstPtr& msg,FilterBase::Sensor* sensor)
 {
     /**
      * General Callback for odometry subscriber
@@ -156,7 +163,14 @@ void Robot::ImuCallback(const sensor_msgs::Imu::ConstPtr& msg,FilterBase::Sensor
     // General Callback for IMU subscriber
     sensor_msgs::Imu imuMsg = *msg;
     imuRecieved = true;
-    sensor.UpdateMeasurements(Robot::PrepareImuMeasurement(imuMsg));
+    std::cout<<"IMU Callback for "<<sensor->sensorName<<std::endl;
+    m_kalmanFilter.UpdateMeasurements(Robot::PrepareImuMeasurement(imuMsg),sensor);
+    //FilterBase::Sensor::measurement preparedMeasurement;
+    //preparedMeasurement = Robot::PrepareImuMeasurement(imuMsg);
+
+    //sensor.measurementVector = sensor.sensorModelMatrix * preparedMeasurement.measurementVector;
+    //sensor.measurementCovarianceMatrix = sensor.sensorModelMatrix * preparedMeasurement.measurementCovariance * sensor.sensorModelMatrix.transpose();
+    
     return;
 };
 
@@ -309,7 +323,7 @@ void Robot::PublishFilteredBelief()
     return;
 };
 
-void Robot::CreateSubscribers(FilterBase::Sensor sensor)
+void Robot::CreateSubscribers(FilterBase::Sensor& sensor)
 {
     // This function will create subscribers on the basis of sensor name, type and topic name provided.
     ros::Subscriber subscriberInstance;
@@ -318,20 +332,22 @@ void Robot::CreateSubscribers(FilterBase::Sensor sensor)
     std::string subscriberTopicName = m_sensorSet[sensor.sensorName];
     ROS_INFO_STREAM(subscriberTopicName);
     std::string sensorType = sensor.sensorType;
+    FilterBase::Sensor* sensorPtr;
+    sensorPtr = &sensor;
 
     if(sensorType == "odometry"){
         /**
          * For odometry sensors we create a generalized odometry subsciber
          */
         subscriberInstance = _nodehandle.subscribe<nav_msgs::Odometry>(subscriberTopicName,20,
-        boost::bind(&Robot::OdometryCallback,this,_1,sensor));
+        boost::bind(&Robot::OdometryCallback,this,_1,sensorPtr));
     }
     else if (sensorType == "imu"){
         /**
          * For inertial sensors we create a genearlized subscriber
          */
         subscriberInstance = _nodehandle.subscribe<sensor_msgs::Imu>(subscriberTopicName,20,
-        boost::bind(&Robot::ImuCallback,this,_1,sensor));
+        boost::bind(&Robot::ImuCallback,this,_1,sensorPtr));
     };
     subscriberVector.push_back(subscriberInstance);
     std::string logString = "Subscriber created for " + sensor.sensorName + " listening to topic " + subscriberTopicName;
