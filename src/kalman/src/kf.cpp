@@ -36,16 +36,33 @@ void KalmanFilter::ExecutePredictionStep()
     // Calculate the time interval between two prediction steps
     currentMessageTime = ros::Time::now();
     ros::Duration deltaTime = currentMessageTime - previousMessageTime;
+    std::cout<<currentMessageTime<<std::endl;
+    std::cout<<previousMessageTime<<std::endl;
+    previousMessageTime = currentMessageTime;
     double dt = deltaTime.toSec();
-
+    std::cout<<"The elapsed time is "<<std::endl;
+    std::cout<<dt<<std::endl;
     // Update the control input vector
     UpdateControlInputVector();
     
     // Prediction Step 
     // Calculate belief vector 
+    std::cout<<"The control input vector is "<<std::endl;
+    std::cout<<m_controlInputVector<<std::endl;
+    
+
+    std::cout<<"The control addition is"<<std::endl;
+    auto controlAddition = m_controlInputMatrixB * m_controlInputVector * dt;
+    std::cout<<controlAddition<<std::endl;
     m_filterBelief.beliefVector = m_jacobianMatrixA * m_filterBelief.beliefVector + m_controlInputMatrixB * m_controlInputVector * dt;
+
     // Calculate the belief covariance
     m_filterBelief.beliefCovariance = m_jacobianMatrixA * m_filterBelief.beliefCovariance * m_jacobianMatrixA.transpose() + m_motionNoiseCovarianceMatrix;
+    std::cout<<"Belief vector after prediction"<<std::endl;
+    std::cout<<m_filterBelief.beliefVector<<std::endl;
+
+    std::cout<<"Belief covariance after prediction"<<std::endl;
+    std::cout<<m_filterBelief.beliefCovariance<<std::endl;
 
     return;
 
@@ -84,27 +101,19 @@ void KalmanFilter::ExecuteSingleUpdateStep(FilterBase::Sensor &sensor)
        return;
    }
 
-   //std::cout<<"Update step for "<<sensor.sensorName<<std::endl;
-   //std::cout<<"Belief covariance"<<std::endl;
-   //std::cout<<m_filterBelief.beliefCovariance<<std::endl;
    auto adjustedBeliefCovariance = sensor.sensorModelMatrix * m_filterBelief.beliefCovariance * sensor.sensorModelMatrix.transpose();
-   //std::cout<<"Adjusted Belief covariance"<<std::endl;
-   //std::cout<<adjustedBeliefCovariance<<std::endl;
-   //std::cout<<"Sensor measurement covariance"<<std::endl;
-   //std::cout<<sensor.measurementCovarianceMatrix<<std::endl;
    auto inverseTerm = adjustedBeliefCovariance + sensor.measurementCovarianceMatrix;
-   //std::cout<<"Inverse Terms"<<std::endl;
-   //std::cout<<inverseTerm<<std::endl;
    auto kalmanGain = m_filterBelief.beliefCovariance * sensor.sensorModelMatrix.transpose() * (inverseTerm.inverse());
-   //std::cout<<"Kalman Gain"<<std::endl;
-   //std::cout<<kalmanGain<<std::endl; 
    // Calculating updated belief vector
    m_filterBelief.beliefVector = m_filterBelief.beliefVector + kalmanGain * (sensor.measurementVector - sensor.sensorModelMatrix * m_filterBelief.beliefVector);
 
    // Calculating updated covariance matrix
    m_filterBelief.beliefCovariance = m_filterBelief.beliefCovariance - kalmanGain * sensor.sensorModelMatrix * m_filterBelief.beliefCovariance;
-
-    return;
+   std::cout<<"After measurements from "<<sensor.sensorName<<std::endl;
+   std::cout<<m_filterBelief.beliefVector<<std::endl;
+   std::cout<<m_filterBelief.beliefCovariance<<std::endl;
+   
+   return;
 };
 
 KalmanFilter::belief KalmanFilter::GetBelief()
@@ -119,3 +128,7 @@ KalmanFilter::~KalmanFilter()
     return;
 }
 
+/**
+ * Acceleration covariance seems to drop a lot after imu integration - check imu covariances
+ * Control addition seems to be incorrect! It's almost as if multiplication with dt results in an increase in value
+ */

@@ -122,7 +122,6 @@ FilterBase::Sensor::measurement Robot::PrepareOdometryMeasurement(const nav_msgs
     // Transferring data from geometry msgs (boost arrays) to std vectors
     std::vector<double> poseCovarianceVectorized;
     std::vector<double> twistCovarianceVectorized;
-    ROS_INFO_STREAM(odomMsg.pose);
 
 
     for (auto i = odomMsg.pose.covariance.begin(); i != odomMsg.pose.covariance.end(); ++i)
@@ -156,8 +155,6 @@ FilterBase::Sensor::measurement Robot::PrepareOdometryMeasurement(const nav_msgs
     FilterBase::Sensor::measurement odomMeasurement;
     odomMeasurement.measurementVector = measurementVector;
     odomMeasurement.measurementCovariance = measurementCovariance;
-    std::cout<<"Measurement covariance is "<<std::endl;
-    std::cout<<measurementCovariance<<std::endl;
     return odomMeasurement;
 }
 
@@ -237,7 +234,6 @@ FilterBase::Sensor::measurement Robot::PrepareImuMeasurement(const sensor_msgs::
     std::vector<double> angularVelocityCovarianceVectorized;
     std::vector<double> linearAccelerationCovarianceVectorized;
     std::vector<double> orientationCovarianceVectorized;
-    ROS_INFO_STREAM(imuMsg);
     for (auto i = imuMsg.angular_velocity_covariance.begin(); i != imuMsg.angular_velocity_covariance.end(); ++i)
     {
         if(*i == 0){
@@ -276,8 +272,6 @@ FilterBase::Sensor::measurement Robot::PrepareImuMeasurement(const sensor_msgs::
     measurementCovariance.block<3,3>(9,9) = Eigen::Map<Eigen::Matrix<double,3,3>>(angularVelocityCovarianceVectorized.data());
     measurementCovariance.block<3,3>(12,12) = Eigen::Map<Eigen::Matrix<double,3,3>>(linearAccelerationCovarianceVectorized.data());
 
-    
-    std::cout<<measurementCovariance<<std::endl;
     FilterBase::Sensor::measurement measurement;
     measurement.measurementVector = measurementVector;
     measurement.measurementCovariance = measurementCovariance;
@@ -433,12 +427,7 @@ int main(int argc, char **argv)
         if (kalman.imuRecieved && kalman.odomRecieved)
         {   
             kalman.m_kalmanFilter.ExecutePredictionStep();
-            ROS_INFO_STREAM("After prediction");
-            ROS_INFO_STREAM(kalman.m_kalmanFilter.m_filterBelief.beliefCovariance);
-
             kalman.m_kalmanFilter.ExecuteUpdateStep();
-            ROS_INFO_STREAM("After update");
-            ROS_INFO_STREAM(kalman.m_kalmanFilter.m_filterBelief.beliefCovariance);
             kalman.PublishFilteredBelief();
         }
         
