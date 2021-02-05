@@ -8,7 +8,8 @@
 #include "tf2_ros/transform_broadcaster.h"
 #include "nav_msgs/Odometry.h"
 #include "sensor_msgs/Imu.h"
-#include "kalman/kf.hpp"
+//#include "kalman/kf.hpp"
+#include "kalman/ekf.hpp"
 
 class Robot
 {
@@ -35,7 +36,7 @@ public:
 
     ros::Timer filterPublishTimer;
     
-    KalmanFilter m_kalmanFilter;
+    ExtendedKalmanFilter m_kalmanFilter;
     /**
      * @brief Class constructor. Initializes the class and assigns the nodehandle.
      * Sets the rosparams and starts the filter timer
@@ -47,7 +48,7 @@ public:
     void ImuCallback(const sensor_msgs::Imu::ConstPtr& msg,FilterBase::Sensor* sensor);
     void ReadRosparams();
     void PublishFilteredBelief();
-    nav_msgs::Odometry ConvertBeliefToOdometry(KalmanFilter::belief& belief);
+    nav_msgs::Odometry ConvertBeliefToOdometry(ExtendedKalmanFilter::belief& belief);
     void CreateMeasurementFromOdometry(const nav_msgs::Odometry);
     void CreateMeasurementFromImu(const sensor_msgs::Imu);
 

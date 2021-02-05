@@ -132,11 +132,16 @@ add_library(kalman_filter
   src/kf.cpp
 )
 
+add_library(extended_kalman_filter
+  src/ekf.cpp
+)
+
 ## Add cmake target dependencies of the library
 ## as an example, code may need to be generated before libraries
 ## either from message generation or dynamic reconfigure
 add_dependencies(filter_base ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 add_dependencies(kalman_filter ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS} filter_base)
+add_dependencies(extended_kalman_filter ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS} filter_base)
 
 ## Declare a C++ executable
 ## With catkin_make all packages are built within a single CMake context
@@ -165,14 +170,21 @@ target_link_libraries(kalman_ros_node
   ${catkin_LIBRARIES}
   ${YAML_CPP_LIBRARIES}
   filter_base
-  kalman_filter
+  extended_kalman_filter
+  
 )
 target_link_libraries(kalman_filter
   ${catkin_LIBRARIES}
   ${YAML_CPP_LIBRARIES}
   filter_base
-
 )
+target_link_libraries(extended_kalman_filter
+  ${catkin_LIBRARIES}
+  ${YAML_CPP_LIBRARIES}
+  filter_base
+)
+
+
 
 #############
 ## Install ##

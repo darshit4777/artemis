@@ -279,7 +279,7 @@ FilterBase::Sensor::measurement Robot::PrepareImuMeasurement(const sensor_msgs::
 
 }
 
-nav_msgs::Odometry Robot::ConvertBeliefToOdometry(KalmanFilter::belief &belief)
+nav_msgs::Odometry Robot::ConvertBeliefToOdometry(ExtendedKalmanFilter::belief &belief)
 {
     nav_msgs::Odometry filteredOdom;
     filteredOdom.child_frame_id = "base_link";
@@ -345,7 +345,7 @@ void Robot::PublishFilteredBelief()
     // Send it !    
     this->_transfromBroadcaster.sendTransform(robotTransform);
     */
-    KalmanFilter::belief filteredBelief = m_kalmanFilter.GetBelief();
+    ExtendedKalmanFilter::belief filteredBelief = m_kalmanFilter.GetBelief();
     nav_msgs::Odometry odomMsg = ConvertBeliefToOdometry(filteredBelief);
     //ROS_INFO_STREAM(m_kalmanFilter.m_filterBelief.beliefVector);
     //ROS_INFO_STREAM(m_kalmanFilter.m_filterBelief.beliefCovariance);

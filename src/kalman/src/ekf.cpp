@@ -121,9 +121,9 @@ void ExtendedKalmanFilter::ExecuteSingleUpdateStep(FilterBase::Sensor &sensor)
 
    // Calculating updated covariance matrix
    m_filterBelief.beliefCovariance = m_filterBelief.beliefCovariance - kalmanGain * sensor.sensorModelMatrix * m_filterBelief.beliefCovariance;
-   std::cout<<"After measurements from "<<sensor.sensorName<<std::endl;
-   std::cout<<m_filterBelief.beliefVector<<std::endl;
-   std::cout<<m_filterBelief.beliefCovariance<<std::endl;
+   //std::cout<<"After measurements from "<<sensor.sensorName<<std::endl;
+   //std::cout<<m_filterBelief.beliefVector<<std::endl;
+   //std::cout<<m_filterBelief.beliefCovariance<<std::endl;
    
    return;
 };
