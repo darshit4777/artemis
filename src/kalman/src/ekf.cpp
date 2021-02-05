@@ -1,72 +1,80 @@
-#include "kalman/kf.hpp"
+#include "kalman/ekf.hpp"
 #include "boost/bind.hpp"
 
-KalmanFilter::KalmanFilter()
+ExtendedKalmanFilter::ExtendedKalmanFilter()
 {
     
     // Setting the jacobian matrix to identity for Kalman Filter
-    m_jacobianMatrixA.resize(15,15);
-    m_jacobianMatrixA.setIdentity();
-
-    // Setting the control input vector for a Kalman Filter 
-    // All measurements which are first and higher order derivatives are considered as control inputs
-    m_controlInputVector.resize(9,1);
-    // Setting the control input matrix for a Kalman Filter
-    m_controlInputMatrixB.resize(15,9);
-    m_controlInputMatrixB.setZero();
-    Eigen::MatrixXd identity9;
-    identity9.resize(9,9);
-    identity9.setIdentity();
-    m_controlInputMatrixB.block<9,9>(0,0) = identity9; 
+    m_jacobianMatrixG.resize(15,15);
+    m_jacobianMatrixG.setIdentity(); 
     
     currentMessageTime = ros::Time::now();
     previousMessageTime = ros::Time::now();                                               
     return;
 };
 
-void KalmanFilter::UpdateControlInputVector()
+void ExtendedKalmanFilter::UpdateJacobianMatrix(double dt)
 {   
+    // Resetting the matrix
+    m_jacobianMatrixG.setIdentity();
+    // Theta serves as the yaw - extracted for convenience
+    double theta = m_filterBelief.beliefVector[5];
+    // Updating Position Rows
+    /// X position
+    m_jacobianMatrixG.row(0)[6] = cos(theta) * dt;
+    m_jacobianMatrixG.row(0)[7] = -sin(theta) * dt;
 
-    m_controlInputVector = m_filterBelief.beliefVector.block<9,1>(6,0);   
+    /// Y position
+    m_jacobianMatrixG.row(1)[6] = sin(theta) * dt;
+    m_jacobianMatrixG.row(1)[7] = cos(theta) * dt;   
+
+    /// Z position
+    m_jacobianMatrixG.row(2)[8] = dt;
+
+    /// Roll
+    m_jacobianMatrixG.row(3)[9] = dt;
+    /// Pitch
+    m_jacobianMatrixG.row(4)[10] = dt;
+    /// Yaw
+    m_jacobianMatrixG.row(5)[11] = dt;
+
+    // Updating Velocity Rows
+    /// X Velocity
+    m_jacobianMatrixG.row(6)[12] = dt;
+    /// Y Velocity
+    m_jacobianMatrixG.row(7)[13] = dt;
+    /// Z Velocity
+    m_jacobianMatrixG.row(8)[14] = dt;
+       
     return;
 }
 
-void KalmanFilter::ExecutePredictionStep()
+void ExtendedKalmanFilter::ExecutePredictionStep()
 {   
     // Calculate the time interval between two prediction steps
     currentMessageTime = ros::Time::now();
     ros::Duration deltaTime = currentMessageTime - previousMessageTime;
-    std::cout<<currentMessageTime<<std::endl;
-    std::cout<<previousMessageTime<<std::endl;
+    //std::cout<<currentMessageTime<<std::endl;
+    //std::cout<<previousMessageTime<<std::endl;
     previousMessageTime = currentMessageTime;
     double dt = deltaTime.toSec();
     if (dt > 5.0)
     {
         dt = 1.0;
     }
-    std::cout<<"The elapsed time is "<<std::endl;
-    std::cout<<dt<<std::endl;
-    // Update the control input vector
-    UpdateControlInputVector();
+
+    UpdateJacobianMatrix(dt);
     
     // Prediction Step 
-    // Calculate belief vector 
-    std::cout<<"The control input vector is "<<std::endl;
-    std::cout<<m_controlInputVector<<std::endl;
-    
-
-    std::cout<<"The control addition is"<<std::endl;
-    auto controlAddition = m_controlInputMatrixB * m_controlInputVector * dt;
-    std::cout<<controlAddition<<std::endl;
-    m_filterBelief.beliefVector = m_jacobianMatrixA * m_filterBelief.beliefVector + m_controlInputMatrixB * m_controlInputVector * dt;
+    m_filterBelief.beliefVector = m_jacobianMatrixG * m_filterBelief.beliefVector;
 
     // Calculate the belief covariance
-    m_filterBelief.beliefCovariance = m_jacobianMatrixA * m_filterBelief.beliefCovariance * m_jacobianMatrixA.transpose() + m_motionNoiseCovarianceMatrix;
-    std::cout<<"Belief vector after prediction"<<std::endl;
-    std::cout<<m_filterBelief.beliefVector<<std::endl;
+    m_filterBelief.beliefCovariance = m_jacobianMatrixG * m_filterBelief.beliefCovariance * m_jacobianMatrixG.transpose() + m_motionNoiseCovarianceMatrix;
+    //std::cout<<"Belief vector after prediction"<<std::endl;
+    //std::cout<<m_filterBelief.beliefVector<<std::endl;
 
-    std::cout<<"Belief covariance after prediction"<<std::endl;
-    std::cout<<m_filterBelief.beliefCovariance<<std::endl;
+    //std::cout<<"Belief covariance after prediction"<<std::endl;
+    //std::cout<<m_filterBelief.beliefCovariance<<std::endl;
 
     return;
 
@@ -75,14 +83,14 @@ void KalmanFilter::ExecutePredictionStep()
 
 };
 
-void KalmanFilter::ExecuteUpdateStep()
+void ExtendedKalmanFilter::ExecuteUpdateStep()
 {   
     // Executes the update step for each sensor
-    std:for_each(m_sensorVector.begin(),m_sensorVector.end(),boost::bind(&KalmanFilter::ExecuteSingleUpdateStep,this,_1));
+    std:for_each(m_sensorVector.begin(),m_sensorVector.end(),boost::bind(&ExtendedKalmanFilter::ExecuteSingleUpdateStep,this,_1));
     return;
 };
 
-void KalmanFilter::ExecuteSingleUpdateStep(FilterBase::Sensor &sensor)
+void ExtendedKalmanFilter::ExecuteSingleUpdateStep(FilterBase::Sensor &sensor)
 {
     /**
      * Here we execute the update equation for a single sensor
@@ -120,14 +128,14 @@ void KalmanFilter::ExecuteSingleUpdateStep(FilterBase::Sensor &sensor)
    return;
 };
 
-KalmanFilter::belief KalmanFilter::GetBelief()
+ExtendedKalmanFilter::belief ExtendedKalmanFilter::GetBelief()
 {
     belief copyBelief(m_filterBelief); // Use a copy constructor assignment.
     return copyBelief;
 }
 
 
-KalmanFilter::~KalmanFilter()
+ExtendedKalmanFilter::~ExtendedKalmanFilter()
 {
     return;
 }
