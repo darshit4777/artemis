@@ -16,10 +16,10 @@ sensor_properties:
     sensor_topic: "/imu/data"
     sensor_type: "imu"
     measurements: [ false , false , false,
-                    false , false , false,
+                    false , false , true,
                     false , false , false,
                     false , false , true,
-                    false, false  , false]
+                    true, true  , false]
 
   imu2:
     sensor_topic: "/zed_camera/imu"
